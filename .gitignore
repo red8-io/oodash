@@ -1,3 +1,11 @@
+.env
+*.pyc
+odoo_data.pkl
+last_update.json
+job_costs.json
+financials_data.json
+last_financials_calculation.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

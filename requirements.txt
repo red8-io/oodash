@@ -1,0 +1,9 @@
+dash
+dash_table
+dash-bootstrap-components
+plotly
+pandas
+python-dotenv
+langchain
+langchain_community
+ollama
