@@ -135,9 +135,13 @@ class DataManager:
                 return json.load(f)
         return {}
 
-    def save_job_costs(self):
+    def save_job_costs(self, job_costs=None):
+        if job_costs:
+            self.job_costs = job_costs
+
         with open(self.JOB_COSTS_FILE, 'w') as f:
             json.dump(self.job_costs, f)
+
 
     def load_or_fetch_data(self, force: bool = False) -> tuple:
         cached_data = self.load_cached_data()
