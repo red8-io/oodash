@@ -12,7 +12,7 @@ from callbacks.callbacks import register_callbacks
 from llm_integration import check_ollama_status, extract_model_names
 from data_management import DataManager
 
-load_dotenv(find_dotenv())
+load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING,
@@ -318,6 +318,6 @@ if __name__ == '__main__':
     app = create_app()
     if app:
         logging.info("Starting Dash server")
-        app.run_server(debug=True)
+        app.run_server(debug=True, host='0.0.0.0', port=8003)
     else:
         logging.error("Failed to create app")

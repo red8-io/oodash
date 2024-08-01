@@ -1,0 +1,12 @@
+# Ignore unnecessary files within allowed directories
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/*.log
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.DS_Store
+**/*.egg-info

@@ -2,6 +2,9 @@ import os
 import xmlrpc.client
 import logging
 import pandas as pd
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
 # Odoo API connection
 url = os.getenv('ODOO_URL')

@@ -10,11 +10,11 @@ from odoo import fetch_and_process_data
 
 @dataclass
 class DataManager:
-    DATA_FILE: str = 'odoo_data.pkl'
-    LAST_UPDATE_FILE: str = 'last_update.json'
-    JOB_COSTS_FILE: str = 'job_costs.json'
-    FINANCIALS_FILE: str = 'financials_data.json'
-    LAST_CALCULATION_FILE: str = 'last_financials_calculation.json'
+    DATA_FILE: str = 'data/odoo_data.pkl'
+    LAST_UPDATE_FILE: str = 'data/last_update.json'
+    JOB_COSTS_FILE: str = 'data/job_costs.json'
+    FINANCIALS_FILE: str = 'data/financials_data.json'
+    LAST_CALCULATION_FILE: str = 'data/last_financials_calculation.json'
 
     df_portfolio: pd.DataFrame = field(default_factory=pd.DataFrame)
     df_employees: pd.DataFrame = field(default_factory=pd.DataFrame)

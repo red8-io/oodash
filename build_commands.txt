@@ -1,0 +1,9 @@
+# create docker image
+docker buildx build --platform linux/amd64 -t oodash:latest --load .
+
+# compress to tar
+docker save -o oodash-image.tar oodash:latest
+
+# use port 8003
+# map the cfg folder in NAS to /app/cfg
+# map the data folder in NAS to /app/data
