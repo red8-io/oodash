@@ -7,3 +7,5 @@ python-dotenv
 langchain
 langchain_community
 ollama
+python-jose[cryptography]
+fastapi

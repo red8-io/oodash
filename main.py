@@ -4,13 +4,15 @@ import ast
 import logging
 
 import dash
-from dash import dcc, html, dash_table
+from dash import dcc, html, dash_table, Input, Output
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
+from flask import redirect, request
 
 from callbacks.callbacks import register_callbacks
 from llm_integration import check_ollama_status, extract_model_names
 from data_management import DataManager
+from auth import verify_token
 
 load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
@@ -41,29 +43,15 @@ def safe_unique_values(df, column_name):
         logging.warning(f"Column not found in DataFrame '{column_name}' ")
         return []
 
-def create_app():
-    # Initialize DataManager
-    data_manager = DataManager()
+def create_login_layout():
+    return html.Div([
+        html.H1("Welcome to Oodash"),
+        html.P("You are not logged in. Please log in to access the application."),
+        html.A("Go to Login Page", href="/login", className="button")
+    ], className="login-container")
 
-    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
-        logging.error("Unable to fetch data from Odoo. Please check your connection and try again.")
-        return None
-
-    # Process df_employees to extract job titles
-    df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
-
-    # Get available models
-    ollama_running, available_models = check_ollama_status()
-    if ollama_running:
-        model_options = [{'label': model, 'value': model} for model in extract_model_names(available_models)]
-    else:
-        model_options = []
-
-    # Initialize Dash app
-    app = dash.Dash(__name__)
-
-    # Layout
-    app.layout = html.Div([
+def create_main_layout(data_manager, model_options):
+    return html.Div([
         html.Div([
             html.H1("Oodash", style={'display': 'inline-block'}),
             html.Div([
@@ -308,11 +296,76 @@ def create_app():
         dcc.Store(id='data-store')
     ])
 
+def create_app():
+    # Initialize DataManager
+    data_manager = DataManager()
+
+    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
+        logging.error("Unable to fetch data from Odoo. Please check your connection and try again.")
+        return None
+
+    # Process df_employees to extract job titles
+    df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
+
+    # Get available models
+    ollama_running, available_models = check_ollama_status()
+    if ollama_running:
+        model_options = [{'label': model, 'value': model} for model in extract_model_names(available_models)]
+    else:
+        model_options = []
+
+    # Initialize Dash app
+    app = dash.Dash(__name__)
+    server = app.server
+
+    # Initial layout
+    app.layout = html.Div([
+        dcc.Location(id='url', refresh=False),
+        html.Div(id='page-content')
+    ])
+
+    @app.callback(Output('page-content', 'children'),
+                  Input('url', 'pathname'))
+    def display_page(pathname):
+        if is_authenticated():
+            return create_main_layout(data_manager, model_options)
+        else:
+            return create_login_layout()
+
+    # Authentication check
+    @server.before_request
+    def check_authentication():
+        if request.path == '/login' or request.path == '/logout':
+            return
+        if not is_authenticated() and request.path != '/':
+            return redirect('/login')
+
+    # Logout route
+    @server.route('/logout')
+    def logout():
+        # Clear the token cookie
+        response = redirect('/login')
+        response.set_cookie('access_token', '', expires=0)
+        return response
+
     # Register callbacks after all data is loaded
     register_callbacks(app, data_manager)
     logging.debug("Callbacks registered")
 
     return app
+
+def is_authenticated():
+    token = request.cookies.get('access_token')
+    if not token:
+        return False
+    try:
+        token_data = verify_token(token)
+        # Check if the token has expired
+        if datetime.now().timestamp() > token_data.exp:
+            return False
+        return True
+    except:
+        return False
 
 if __name__ == '__main__':
     app = create_app()
