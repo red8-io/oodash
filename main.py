@@ -4,17 +4,23 @@ import ast
 import logging
 
 import dash
-from dash import dcc, html, dash_table, Input, Output
+from dash import dcc, html, dash_table
 import pandas as pd
 from dotenv import find_dotenv, load_dotenv
-from flask import redirect, request
+
+from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi.middleware.wsgi import WSGIMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.requests import Request
 
 from callbacks.callbacks import register_callbacks
 from llm_integration import check_ollama_status, extract_model_names
 from data_management import DataManager
-from auth import verify_token
+from auth import verify_token, TokenData
 
 load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
+
+logger = logging.getLogger(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING,
@@ -43,14 +49,12 @@ def safe_unique_values(df, column_name):
         logging.warning(f"Column not found in DataFrame '{column_name}' ")
         return []
 
-def create_login_layout():
-    return html.Div([
-        html.H1("Welcome to Oodash"),
-        html.P("You are not logged in. Please log in to access the application."),
-        html.A("Go to Login Page", href="/login", className="button")
-    ], className="login-container")
+# Dash layout (moved to a separate function for clarity)
+def create_dash_layout(data_manager, model_options):
 
-def create_main_layout(data_manager, model_options):
+    # Process df_employees to extract job titles
+    df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
+
     return html.Div([
         html.Div([
             html.H1("Oodash", style={'display': 'inline-block'}),
@@ -296,81 +300,87 @@ def create_main_layout(data_manager, model_options):
         dcc.Store(id='data-store')
     ])
 
-def create_app():
-    # Initialize DataManager
-    data_manager = DataManager()
+# FastAPI routes
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request, token: str = Query(...)):
+    try:
+        # Verify the token
+        token_data = verify_token(token)
+        
+        # If token is valid, serve the Dash app
+        return HTMLResponse(f'''
+            <html>
+                <head>
+                    <script>
+                        window.dashToken = "{token}";
+                    </script>
+                </head>
+                <body>
+                    <div id="dash-container">
+                        <iframe src="/dash/" style="width: 100%; height: 100vh; border: none;"></iframe>
+                    </div>
+                </body>
+            </html>
+        ''')
+    except HTTPException:
+        return RedirectResponse(url="/login")
 
-    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
-        logging.error("Unable to fetch data from Odoo. Please check your connection and try again.")
-        return None
+@app.get("/login")
+async def login_page():
+    return HTMLResponse('''
+        <html>
+            <body>
+                <h1>Login to Oodash</h1>
+                <p>Please log in through the main portal to access Oodash.</p>
+            </body>
+        </html>
+    ''')
 
-    # Process df_employees to extract job titles
-    df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
+# Initialize DataManager
+data_manager = DataManager()
 
-    # Get available models
+if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
+    logging.error("Unable to fetch data from Odoo. Please check your connection and try again.")
+    raise SystemExit("Failed to initialize DataManager")
+
+# Create FastAPI app
+app = FastAPI()
+
+# Create Dash app
+dash_app = dash.Dash(__name__, server=app, url_base_pathname='/dash/')
+dash_app.config.suppress_callback_exceptions = True
+
+# Set up Dash layout
+dash_app.layout = create_dash_layout(data_manager, [])  # Empty list for model_options, will be updated later
+
+# Register Dash callbacks
+register_callbacks(dash_app, data_manager)
+
+@app.get("/api/refresh_data")
+async def refresh_data(token_data: TokenData = Depends(verify_token)):
+    data_manager.load_all_data(force=True)
+    return {"message": "Data refreshed successfully"}
+
+# Startup event to initialize Ollama models
+@app.on_event("startup")
+async def startup_event():
+    global model_options
     ollama_running, available_models = check_ollama_status()
     if ollama_running:
         model_options = [{'label': model, 'value': model} for model in extract_model_names(available_models)]
     else:
         model_options = []
+    
+    # Update Dash layout with model options
+    dash_app.layout = create_dash_layout(data_manager, model_options)
 
-    # Initialize Dash app
-    app = dash.Dash(__name__)
-    server = app.server
+def main():
+    # Mount Dash app
+    app.mount("/dash", WSGIMiddleware(dash_app.server))
 
-    # Initial layout
-    app.layout = html.Div([
-        dcc.Location(id='url', refresh=False),
-        html.Div(id='page-content')
-    ])
+    import uvicorn
+    logger.info("Starting the Oodash FastAPI+Dash application")
+    uvicorn.run(app, host="0.0.0.0", port=8003)
 
-    @app.callback(Output('page-content', 'children'),
-                  Input('url', 'pathname'))
-    def display_page(pathname):
-        if is_authenticated():
-            return create_main_layout(data_manager, model_options)
-        else:
-            return create_login_layout()
-
-    # Authentication check
-    @server.before_request
-    def check_authentication():
-        if request.path == '/login' or request.path == '/logout':
-            return
-        if not is_authenticated() and request.path != '/':
-            return redirect('/login')
-
-    # Logout route
-    @server.route('/logout')
-    def logout():
-        # Clear the token cookie
-        response = redirect('/login')
-        response.set_cookie('access_token', '', expires=0)
-        return response
-
-    # Register callbacks after all data is loaded
-    register_callbacks(app, data_manager)
-    logging.debug("Callbacks registered")
-
-    return app
-
-def is_authenticated():
-    token = request.cookies.get('access_token')
-    if not token:
-        return False
-    try:
-        token_data = verify_token(token)
-        # Check if the token has expired
-        if datetime.now().timestamp() > token_data.exp:
-            return False
-        return True
-    except:
-        return False
-
-if __name__ == '__main__':
-    app = create_app()
-    if app:
-        logging.info("Starting Dash server")
-        app.run_server(debug=True, host='0.0.0.0', port=8003)
-    else:
-        logging.error("Failed to create app")
+if __name__ == "__main__":
+    main()
