@@ -5,23 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oodash</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .tab { display: none; }
+        .tab-button { cursor: pointer; padding: 10px; }
+        .active { background-color: #ccc; }
+    </style>
 </head>
 <body>
     <h1>Oodash</h1>
     
-    <div>
-        <button id="refresh-data">Refresh Data</button>
-        <span id="last-update-time"></span>
-    </div>
-
+    <button id="refresh-data">Refresh Data</button>
+    <span id="last-update-time"></span>
+    
     <div>
         <label for="start-date">Start Date:</label>
         <input type="date" id="start-date">
         <label for="end-date">End Date:</label>
         <input type="date" id="end-date">
     </div>
-
+    
     <div>
         <label for="project-filter">Project Filter:</label>
         <select id="project-filter" multiple>
@@ -30,7 +34,7 @@
             {% endfor %}
         </select>
     </div>
-
+    
     <div>
         <label for="employee-filter">Employee Filter:</label>
         <select id="employee-filter" multiple>
@@ -39,91 +43,202 @@
             {% endfor %}
         </select>
     </div>
-
-    <div id="global-kpi-map"></div>
-    <div id="global-kpi-chart"></div>
-    <div id="financials-chart"></div>
-    <div id="total-revenue-display"></div>
-    <div id="all-projects-hours-chart"></div>
-    <div id="all-projects-revenue-chart"></div>
-    <div id="employee-hours-chart"></div>
-    <div id="total-hours"></div>
-
-    <div>
-        <label for="model-selection">Select LLM Model:</label>
-        <select id="model-selection">
-            {% for model in model_options %}
-            <option value="{{ model.value }}">{{ model.label }}</option>
-            {% endfor %}
-        </select>
-        <button id="generate-llm-report">Generate LLM Report</button>
+    
+    <div class="tab-buttons">
+        <button class="tab-button" onclick="openTab('global-kpi')">Global KPI</button>
+        <button class="tab-button" onclick="openTab('financials')">Financials</button>
+        <button class="tab-button" onclick="openTab('portfolio')">Portfolio</button>
+        <button class="tab-button" onclick="openTab('project')">Project</button>
+        <button class="tab-button" onclick="openTab('employees')">Employees</button>
+        <button class="tab-button" onclick="openTab('sales')">Sales</button>
+        <button class="tab-button" onclick="openTab('reporting')">Reporting</button>
+        <button class="tab-button" onclick="openTab('settings')">Settings</button>
+        <button class="tab-button" onclick="openTab('pivot-table')">Pivot Table</button>
     </div>
-    <div id="llm-report-output"></div>
+    
+    <div id="global-kpi" class="tab">
+        <h2>Global KPI</h2>
+        <div id="global-map"></div>
+        <div id="global-kpi-chart"></div>
+    </div>
+    
+    <div id="financials" class="tab">
+        <h2>Financials</h2>
+        <button id="calculate-financials">Calculate Financials</button>
+        <div id="financials-chart"></div>
+        <div id="total-revenue-display"></div>
+        <div id="all-projects-hours-chart"></div>
+        <div id="all-projects-revenue-chart"></div>
+    </div>
+    
+    <div id="portfolio" class="tab">
+        <h2>Portfolio</h2>
+        <div id="portfolio-hours-chart"></div>
+        <input type="number" id="portfolio-hours-height" placeholder="Min height (px)" value="400">
+        <div id="portfolio-tasks-chart"></div>
+    </div>
+    
+    <div id="project" class="tab">
+        <h2>Project</h2>
+        <select id="project-selector"></select>
+        <div>
+            <input type="radio" id="man-hours" name="unit" value="true" checked>
+            <label for="man-hours">Man Hours</label>
+            <input type="radio" id="man-days" name="unit" value="false">
+            <label for="man-days">Man Days</label>
+        </div>
+        <div id="project-timeline-chart"></div>
+        <div id="project-total-revenue"></div>
+        <div id="project-period-revenue"></div>
+        <div id="project-revenue-chart"></div>
+        <div id="project-tasks-employees-chart"></div>
+    </div>
+    
+    <div id="employees" class="tab">
+        <h2>Employees</h2>
+        <h3 id="total-hours"></h3>
+        <div id="employee-hours-chart"></div>
+        <input type="number" id="employee-chart-height" placeholder="Min height (px)" value="600">
+    </div>
+    
+    <div id="sales" class="tab">
+        <h2>Sales</h2>
+        <div id="sales-chart"></div>
+        <input type="text" id="sales-task-filter" placeholder="Enter task keywords (comma-separated)">
+        <button id="apply-sales-filter">Apply Filter</button>
+    </div>
+    
+    <div id="reporting" class="tab">
+        <h2>Reporting</h2>
+        <h3>Data Quality Report</h3>
+        <div id="data-quality-report"></div>
+        <select id="model-selection"></select>
+        <button id="generate-llm-report">Generate LLM Report</button>
+        <div id="llm-report-output"></div>
+        <div id="long-tasks-list"></div>
+    </div>
+    
+    <div id="settings" class="tab">
+        <h2>Settings</h2>
+        <h3>Job Titles and Costs</h3>
+        <button id="save-cost-revenue">Save Cost and Revenue</button>
+        <button id="add-job-title">Add Job Title</button>
+        <div id="job-costs-table"></div>
+        <div id="job-costs-save-status"></div>
+        <h3>Employees and Job Titles</h3>
+        <div id="employees-job-titles-table"></div>
+    </div>
+    
+    <div id="pivot-table" class="tab">
+        <h2>Pivot Table</h2>
+        <select id="pivot-dataframe-selector"></select>
+        <select id="pivot-index-selector" multiple></select>
+        <select id="pivot-columns-selector" multiple></select>
+        <select id="pivot-values-selector" multiple></select>
+        <select id="pivot-aggfunc-selector"></select>
+        <select id="pivot-chart-type-selector"></select>
+        <div id="pivot-chart"></div>
+        <div id="pivot-table-container"></div>
+    </div>
 
     <script>
-        const token = "{{ token }}";
+        function openTab(tabName) {
+            var tabs = document.getElementsByClassName("tab");
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].style.display = "none";
+            }
+            document.getElementById(tabName).style.display = "block";
+            
+            var buttons = document.getElementsByClassName("tab-button");
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove("active");
+            }
+            event.currentTarget.classList.add("active");
+        }
 
-        function loadChart(chartId, endpoint, params = {}) {
-            const queryString = new URLSearchParams({...params, token}).toString();
-            fetch(`/api/chart/${endpoint}?${queryString}`)
+        // Set the first tab as active by default
+        document.getElementsByClassName("tab-button")[0].click();
+
+        // Add event listeners and functions to fetch data and update charts
+        document.getElementById("refresh-data").addEventListener("click", refreshData);
+        document.getElementById("calculate-financials").addEventListener("click", calculateFinancials);
+        document.getElementById("apply-sales-filter").addEventListener("click", applySalesFilter);
+        document.getElementById("generate-llm-report").addEventListener("click", generateLLMReport);
+        document.getElementById("save-cost-revenue").addEventListener("click", saveCostRevenue);
+        document.getElementById("add-job-title").addEventListener("click", addJobTitle);
+
+        // Functions to fetch data and update charts
+        function refreshData() {
+            fetch('/api/refresh_data')
                 .then(response => response.json())
                 .then(data => {
-                    if (data.error) {
-                        console.error(data.error);
-                        return;
-                    }
-                    if (endpoint === 'global_kpi') {
-                        Plotly.newPlot('global-kpi-map', data.map.data, data.map.layout);
-                        Plotly.newPlot('global-kpi-chart', data.kpi.data, data.kpi.layout);
-                    } else if (endpoint === 'financials') {
-                        Plotly.newPlot('financials-chart', data.financials.data, data.financials.layout);
-                        Plotly.newPlot('all-projects-hours-chart', data.hours.data, data.hours.layout);
-                        Plotly.newPlot('all-projects-revenue-chart', data.revenue.data, data.revenue.layout);
-                        document.getElementById('total-revenue-display').textContent = data.total_revenue;
-                    } else if (endpoint === 'employee_hours') {
-                        Plotly.newPlot('employee-hours-chart', data.chart.data, data.chart.layout);
-                        document.getElementById('total-hours').textContent = `Total Hours: ${data.total_hours}`;
-                    }
+                    document.getElementById("last-update-time").textContent = data.last_update;
+                    updateAllCharts();
                 });
         }
 
-        function updateCharts() {
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
-            const selectedProjects = Array.from(document.getElementById('project-filter').selectedOptions).map(option => option.value).join(',');
-            const selectedEmployees = Array.from(document.getElementById('employee-filter').selectedOptions).map(option => option.value).join(',');
-
-            loadChart('global-kpi', 'global_kpi', { start_date: startDate, end_date: endDate, selected_projects: selectedProjects });
-            loadChart('financials', 'financials', { start_date: startDate, end_date: endDate });
-            loadChart('employee-hours', 'employee_hours', { start_date: startDate, end_date: endDate, selected_projects: selectedProjects, selected_employees: selectedEmployees });
+        function updateAllCharts() {
+            updateGlobalKPI();
+            updateFinancials();
+            updatePortfolio();
+            updateProject();
+            updateEmployees();
+            updateSales();
+            updateReporting();
+            updateSettings();
+            updatePivotTable();
         }
 
-        document.getElementById('refresh-data').addEventListener('click', function() {
-            fetch(`/api/refresh_data?token=${token}`)
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    document.getElementById('last-update-time').textContent = `Last updated: ${data.last_update}`;
-                    updateCharts();
-                });
-        });
+        function updateGlobalKPI() {
+            // Fetch data and update Global KPI charts
+        }
 
-        document.getElementById('start-date').addEventListener('change', updateCharts);
-        document.getElementById('end-date').addEventListener('change', updateCharts);
-        document.getElementById('project-filter').addEventListener('change', updateCharts);
-        document.getElementById('employee-filter').addEventListener('change', updateCharts);
+        function calculateFinancials() {
+            // Fetch data and update Financials charts
+        }
 
-        document.getElementById('generate-llm-report').addEventListener('click', function() {
-            const selectedModel = document.getElementById('model-selection').value;
-            fetch(`/api/generate_llm_report?selected_model=${selectedModel}&token=${token}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('llm-report-output').innerHTML = `<h4>LLM Generated Report (Model: ${selectedModel})</h4><pre>${data.report}</pre>`;
-                });
-        });
+        function updatePortfolio() {
+            // Fetch data and update Portfolio charts
+        }
+
+        function updateProject() {
+            // Fetch data and update Project charts
+        }
+
+        function updateEmployees() {
+            // Fetch data and update Employees charts
+        }
+
+        function applySalesFilter() {
+            // Apply sales filter and update Sales chart
+        }
+
+        function updateReporting() {
+            // Fetch data and update Reporting section
+        }
+
+        function generateLLMReport() {
+            // Generate LLM report
+        }
+
+        function updateSettings() {
+            // Fetch and update Settings data
+        }
+
+        function saveCostRevenue() {
+            // Save cost and revenue data
+        }
+
+        function addJobTitle() {
+            // Add a new job title to the table
+        }
+
+        function updatePivotTable() {
+            // Update Pivot Table based on selections
+        }
 
         // Initial load
-        updateCharts();
+        updateAllCharts();
     </script>
 </body>
 </html>

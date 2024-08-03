@@ -32,9 +32,6 @@ if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
     logging.error("Unable to fetch data from Odoo. Please check your connection and try again.")
     raise SystemExit("Failed to initialize DataManager")
 
-# Set up Jinja2 templates
-templates = Jinja2Templates(directory="templates")
-
 model_options = []
 
 @asynccontextmanager
@@ -53,6 +50,9 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app with lifespan
 app = FastAPI(lifespan=lifespan)
+
+# Set up Jinja2 templates
+templates = Jinja2Templates(directory="templates")
 
 # Serve static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
