@@ -5,6 +5,7 @@ from jose import JWTError, jwt
 from fastapi import HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
+from zoneinfo import ZoneInfo
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv('cfg/.env', raise_error_if_not_found=True))
@@ -12,13 +13,14 @@ load_dotenv(find_dotenv('cfg/.env', raise_error_if_not_found=True))
 # These should be kept secret and stored securely (e.g., in environment variables)
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
+tz_info = ZoneInfo(os.getenv('TIMEZONE'))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class TokenData(BaseModel):
     email: Optional[str] = None
     role: Optional[str] = None
-    exp: Optional[int] = None
+    exp: Optional[float] = None
 
 def verify_token(token: str):
     credentials_exception = HTTPException(
@@ -38,18 +40,18 @@ def verify_token(token: str):
     except JWTError:
         raise credentials_exception
 
-async def get_current_user(request: Request):
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
+def authenticate(token: str):
+
     if token.startswith("Bearer "):
         token = token.split(" ")[1]
-    
+
     token_data = verify_token(token)
-    
+
+    if not token_data:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     # Check if the token has expired
-    if datetime.now().timestamp() > token_data.exp:
+    if datetime.now(tz_info).timestamp() > token_data.exp:
         raise HTTPException(status_code=401, detail="Token has expired")
     
     return token_data

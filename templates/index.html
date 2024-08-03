@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oodash</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Oodash</h1>
+    
+    <div>
+        <button id="refresh-data">Refresh Data</button>
+        <span id="last-update-time"></span>
+    </div>
+
+    <div>
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date">
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date">
+    </div>
+
+    <div>
+        <label for="project-filter">Project Filter:</label>
+        <select id="project-filter" multiple>
+            {% for project in projects %}
+            <option value="{{ project.value }}">{{ project.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="employee-filter">Employee Filter:</label>
+        <select id="employee-filter" multiple>
+            {% for employee in employees %}
+            <option value="{{ employee.value }}">{{ employee.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="global-kpi-map"></div>
+    <div id="global-kpi-chart"></div>
+    <div id="financials-chart"></div>
+    <div id="total-revenue-display"></div>
+    <div id="all-projects-hours-chart"></div>
+    <div id="all-projects-revenue-chart"></div>
+    <div id="employee-hours-chart"></div>
+    <div id="total-hours"></div>
+
+    <div>
+        <label for="model-selection">Select LLM Model:</label>
+        <select id="model-selection">
+            {% for model in model_options %}
+            <option value="{{ model.value }}">{{ model.label }}</option>
+            {% endfor %}
+        </select>
+        <button id="generate-llm-report">Generate LLM Report</button>
+    </div>
+    <div id="llm-report-output"></div>
+
+    <script>
+        const token = "{{ token }}";
+
+        function loadChart(chartId, endpoint, params = {}) {
+            const queryString = new URLSearchParams({...params, token}).toString();
+            fetch(`/api/chart/${endpoint}?${queryString}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+                    if (endpoint === 'global_kpi') {
+                        Plotly.newPlot('global-kpi-map', data.map.data, data.map.layout);
+                        Plotly.newPlot('global-kpi-chart', data.kpi.data, data.kpi.layout);
+                    } else if (endpoint === 'financials') {
+                        Plotly.newPlot('financials-chart', data.financials.data, data.financials.layout);
+                        Plotly.newPlot('all-projects-hours-chart', data.hours.data, data.hours.layout);
+                        Plotly.newPlot('all-projects-revenue-chart', data.revenue.data, data.revenue.layout);
+                        document.getElementById('total-revenue-display').textContent = data.total_revenue;
+                    } else if (endpoint === 'employee_hours') {
+                        Plotly.newPlot('employee-hours-chart', data.chart.data, data.chart.layout);
+                        document.getElementById('total-hours').textContent = `Total Hours: ${data.total_hours}`;
+                    }
+                });
+        }
+
+        function updateCharts() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const selectedProjects = Array.from(document.getElementById('project-filter').selectedOptions).map(option => option.value).join(',');
+            const selectedEmployees = Array.from(document.getElementById('employee-filter').selectedOptions).map(option => option.value).join(',');
+
+            loadChart('global-kpi', 'global_kpi', { start_date: startDate, end_date: endDate, selected_projects: selectedProjects });
+            loadChart('financials', 'financials', { start_date: startDate, end_date: endDate });
+            loadChart('employee-hours', 'employee_hours', { start_date: startDate, end_date: endDate, selected_projects: selectedProjects, selected_employees: selectedEmployees });
+        }
+
+        document.getElementById('refresh-data').addEventListener('click', function() {
+            fetch(`/api/refresh_data?token=${token}`)
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    document.getElementById('last-update-time').textContent = `Last updated: ${data.last_update}`;
+                    updateCharts();
+                });
+        });
+
+        document.getElementById('start-date').addEventListener('change', updateCharts);
+        document.getElementById('end-date').addEventListener('change', updateCharts);
+        document.getElementById('project-filter').addEventListener('change', updateCharts);
+        document.getElementById('employee-filter').addEventListener('change', updateCharts);
+
+        document.getElementById('generate-llm-report').addEventListener('click', function() {
+            const selectedModel = document.getElementById('model-selection').value;
+            fetch(`/api/generate_llm_report?selected_model=${selectedModel}&token=${token}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('llm-report-output').innerHTML = `<h4>LLM Generated Report (Model: ${selectedModel})</h4><pre>${data.report}</pre>`;
+                });
+        });
+
+        // Initial load
+        updateCharts();
+    </script>
+</body>
+</html>
