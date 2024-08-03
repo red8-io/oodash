@@ -16,6 +16,8 @@ from data_management import DataManager
 from layout import safe_unique_values
 from auth import authenticate, TokenData
 
+from callbacks.portfolio import portfolio
+
 load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
 logger = logging.getLogger(__name__)
@@ -50,6 +52,13 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app with lifespan
 app = FastAPI(lifespan=lifespan)
+
+def get_data_manager():
+    return data_manager
+
+app.dependency_overrides[get_data_manager] = get_data_manager
+
+app.include_router(portfolio)
 
 # Set up Jinja2 templates
 templates = Jinja2Templates(directory="templates")

@@ -74,7 +74,6 @@
     <div id="portfolio" class="tab">
         <h2>Portfolio</h2>
         <div id="portfolio-hours-chart"></div>
-        <input type="number" id="portfolio-hours-height" placeholder="Min height (px)" value="400">
         <div id="portfolio-tasks-chart"></div>
     </div>
     
@@ -141,6 +140,7 @@
         <div id="pivot-table-container"></div>
     </div>
 
+    <script src="/static/js/portfolio.js"></script>
     <script>
         function openTab(tabName) {
             var tabs = document.getElementsByClassName("tab");
@@ -180,7 +180,6 @@
         function updateAllCharts() {
             updateGlobalKPI();
             updateFinancials();
-            updatePortfolio();
             updateProject();
             updateEmployees();
             updateSales();
@@ -195,10 +194,6 @@
 
         function calculateFinancials() {
             // Fetch data and update Financials charts
-        }
-
-        function updatePortfolio() {
-            // Fetch data and update Portfolio charts
         }
 
         function updateProject() {

@@ -8,7 +8,7 @@ from datetime import datetime
 
 from callbacks.global_kpi import register_global_kpi_callbacks
 from callbacks.financials import register_financials_callbacks
-from callbacks.projects import register_portfolio_callbacks
+from callbacks.portfolio import register_portfolio_callbacks
 from callbacks.employees import register_employees_callbacks
 from callbacks.llm import register_llm_callback
 from callbacks.project import register_project_callback
