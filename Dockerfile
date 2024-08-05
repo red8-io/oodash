@@ -48,4 +48,4 @@ EXPOSE 8003
 USER appuser
 
 # Use JSON format for CMD
-CMD ["sh", "-c", "python main.py"]
+CMD ["sh", "-c", "python oodash.py"]

@@ -1,18 +1,12 @@
 from datetime import datetime, timedelta
 import ast
-
 import logging
 
-import dash
-from dash import dcc, html, dash_table
 import pandas as pd
-from dotenv import find_dotenv, load_dotenv
 
-from callbacks.callbacks import register_callbacks
-from llm_integration import check_ollama_status, extract_model_names
+from dash import dcc, html, dash_table
 from data_management import DataManager
-
-load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
+from llm_integration import check_ollama_status, extract_model_names
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING,
@@ -41,15 +35,8 @@ def safe_unique_values(df, column_name):
         logging.warning(f"Column not found in DataFrame '{column_name}' ")
         return []
 
-def create_app():
-    # Initialize DataManager
-    data_manager = DataManager()
-
-    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
-        logging.error("Unable to fetch data from Odoo. Please check your connection and try again.")
-        return None
-
-    # Process df_employees to extract job titles
+def create_layout(data_manager: DataManager):
+        # Process df_employees to extract job titles
     df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
 
     # Get available models
@@ -59,11 +46,8 @@ def create_app():
     else:
         model_options = []
 
-    # Initialize Dash app
-    app = dash.Dash(__name__)
-
     # Layout
-    app.layout = html.Div([
+    return html.Div([
         html.Div([
             html.H1("Oodash", style={'display': 'inline-block'}),
             html.Div([
@@ -307,17 +291,3 @@ def create_app():
         # Store for holding the current data
         dcc.Store(id='data-store')
     ])
-
-    # Register callbacks after all data is loaded
-    register_callbacks(app, data_manager)
-    logging.debug("Callbacks registered")
-
-    return app
-
-if __name__ == '__main__':
-    app = create_app()
-    if app:
-        logging.info("Starting Dash server")
-        app.run_server(debug=True, host='0.0.0.0', port=8003)
-    else:
-        logging.error("Failed to create app")
