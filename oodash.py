@@ -2,11 +2,15 @@ import logging
 import os
 
 import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
 from dotenv import find_dotenv, load_dotenv
+from flask import request, redirect
 
 from callbacks.callbacks import register_callbacks
 from data_management import DataManager
-from layout import create_layout
+from layout import create_layout, create_login_layout
+from auth import authenticate
 
 load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
@@ -26,11 +30,32 @@ def create_app():
     # Initialize Dash app
     app = dash.Dash(__name__)
 
-    app.layout = create_layout(data_manager)
+    # Define the layout with a div for the content
+    app.layout = html.Div([
+        dcc.Location(id='url', refresh=False),
+        html.Div(id='page-content')
+    ])
 
-    # Register callbacks after all data is loaded
-    register_callbacks(app, data_manager)
-    logging.debug("Callbacks registered")
+    # Callback to update the page content based on authentication
+    @app.callback(Output('page-content', 'children'),
+                  Input('url', 'pathname'))
+    def display_page(pathname):
+        # Get the JWT from the cookie
+        jwt_cookie = request.cookies.get('access_token')
+        if jwt_cookie and jwt_cookie.startswith('Bearer '):
+            token = jwt_cookie.split(' ')[1]
+            try:
+                token_data = authenticate(token)
+
+                register_callbacks(app, data_manager)
+                logging.debug("Callbacks registered")
+
+                return create_layout(data_manager)
+            except Exception as e:
+                logging.error(f"Authentication error: {str(e)}")
+                return create_login_layout()
+        else:
+            return create_login_layout()
 
     return app
 

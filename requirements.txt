@@ -1,3 +1,4 @@
+flask
 dash
 dash_table
 dash-bootstrap-components
@@ -7,3 +8,5 @@ python-dotenv
 langchain
 langchain_community
 ollama
+pyjwt
+python-jose[cryptography]

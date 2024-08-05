@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 import ast
 import logging
@@ -34,6 +35,14 @@ def safe_unique_values(df, column_name):
     else:
         logging.warning(f"Column not found in DataFrame '{column_name}' ")
         return []
+
+def create_login_layout():
+    login_url = os.getenv('LOGIN_URL')
+    return html.Div([
+        html.H1("Welcome to Oodash"),
+        html.P("Please log in to access the dashboard."),
+        html.A("Login", href=login_url, className="login-button")
+    ])
 
 def create_layout(data_manager: DataManager):
         # Process df_employees to extract job titles
