@@ -1,4 +1,5 @@
 import logging
+import os
 
 import dash
 from dotenv import find_dotenv, load_dotenv
@@ -38,7 +39,7 @@ def main():
 
     if app:
         logging.info("Starting Dash server")
-        app.run_server(debug=True, host='0.0.0.0', port=8003)
+        app.run_server(debug=True, host=os.getenv('SERVICE_URL'), port=int(os.getenv('SERVICE_PORT')))
     else:
         logging.error("Failed to create app")
 
