@@ -18,7 +18,8 @@ def register_financials_callbacks(app, data_manager: DataManager):
          Output('all-projects-revenue-chart', 'figure'),
          Output('calculation-progress', 'children'),
          Output('calculate-button', 'disabled')],
-        [Input('date-range', 'start_date'),
+        [Input('token-store', 'data'),
+         Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
          Input('calculate-button', 'n_clicks')]
     )

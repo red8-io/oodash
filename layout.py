@@ -44,7 +44,7 @@ def create_login_layout():
         html.A("Login", href=login_url, className="login-button")
     ])
 
-def create_layout(data_manager: DataManager):
+def create_layout(data_manager: DataManager, token: str = None):
         # Process df_employees to extract job titles
     df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
 
@@ -298,5 +298,6 @@ def create_layout(data_manager: DataManager):
         ], id='tabs'),
 
         # Store for holding the current data
-        dcc.Store(id='data-store')
+        dcc.Store(id='data-store'),
+        dcc.Store(id='token-store', data=token)
     ])

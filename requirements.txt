@@ -10,3 +10,4 @@ langchain_community
 ollama
 pyjwt
 python-jose[cryptography]
+fastapi

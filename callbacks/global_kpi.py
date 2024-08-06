@@ -9,7 +9,8 @@ def register_global_kpi_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('global-map', 'figure'),
         Output('global-kpi-chart', 'figure')],
-        [Input('date-range', 'start_date'),
+        [Input('token-store', 'data'),
+         Input('date-range', 'start_date'),
         Input('date-range', 'end_date'),
         Input('project-filter', 'value')]
     )

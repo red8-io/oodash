@@ -9,7 +9,8 @@ def register_employees_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('employee-hours-chart', 'figure'),
         Output('total-hours', 'children')],
-        [Input('date-range', 'start_date'),
+        [Input('token-store', 'data'),
+         Input('date-range', 'start_date'),
         Input('date-range', 'end_date'),
         Input('project-filter', 'value'),
         Input('employee-filter', 'value'),

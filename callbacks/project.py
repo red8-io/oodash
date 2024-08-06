@@ -15,7 +15,8 @@ def register_project_callback(app, data_manager: DataManager):
          Output('project-tasks-employees-chart', 'figure'),
          Output('project-total-revenue', 'children'),
          Output('project-period-revenue', 'children')],
-        [Input('project-selector', 'value'),
+        [Input('token-store', 'data'),
+         Input('project-selector', 'value'),
          Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
          Input('employee-filter', 'value'),
@@ -39,7 +40,8 @@ def register_project_callback(app, data_manager: DataManager):
 
     @app.callback(
         Output('project-selector', 'options'),
-        [Input('data-store', 'data')]
+        [Input('token-store', 'data'),
+         Input('data-store', 'data')]
     )
     def update_project_options(serialized_data):
         if serialized_data is None:

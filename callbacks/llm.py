@@ -8,7 +8,8 @@ def register_llm_callback(app, data_manager: DataManager):
 
     @app.callback(
         Output('llm-report-output', 'children'),
-        [Input('generate-llm-report', 'n_clicks')],
+        [Input('token-store', 'data'),
+         Input('generate-llm-report', 'n_clicks')],
         [State('model-selection', 'value'),
          State('data-store', 'data')],
         prevent_initial_call=True

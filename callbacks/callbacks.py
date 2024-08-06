@@ -30,7 +30,8 @@ def register_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('data-store', 'data'),
         Output('last-update-time', 'children')],
-        [Input('refresh-data', 'n_clicks')],
+        [Input('token-store', 'data'),
+         Input('refresh-data', 'n_clicks')],
         [State('data-store', 'data')]
     )
     def refresh_dashboard_data(n_clicks, current_data):
@@ -60,7 +61,8 @@ def register_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('project-filter', 'options'),
          Output('employee-filter', 'options')],
-        [Input('data-store', 'data')]
+        [Input('token-store', 'data'),
+         Input('data-store', 'data')]
     )
     def update_filter_options(serialized_data):
         if serialized_data is None:
@@ -73,7 +75,8 @@ def register_callbacks(app, data_manager: DataManager):
 
     @app.callback(
         Output('sales-chart', 'figure'),
-        [Input('date-range', 'start_date'),
+        [Input('token-store', 'data'),
+         Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
          Input('apply-sales-filter', 'n_clicks')],
         [State('sales-task-filter', 'value')]
@@ -126,7 +129,8 @@ def register_callbacks(app, data_manager: DataManager):
 
     @app.callback(
         Output('project-filter', 'disabled'),
-        [Input('tabs', 'value')]
+        [Input('token-store', 'data'),
+         Input('tabs', 'value')]
     )
     def disable_project_filter(tab):
         return tab in ['project-tab', 'Settings']
