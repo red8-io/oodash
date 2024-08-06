@@ -1,10 +1,12 @@
-import logging
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import dash
 import pandas as pd
 from data_management import DataManager
 from datetime import datetime
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 from callbacks.global_kpi import register_global_kpi_callbacks
 from callbacks.financials import register_financials_callbacks

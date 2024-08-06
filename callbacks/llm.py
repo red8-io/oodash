@@ -1,8 +1,10 @@
-import logging
 from dash import html
 from dash.dependencies import Input, Output, State
 from llm_integration import generate_llm_report
 from data_management import DataManager
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def register_llm_callback(app, data_manager: DataManager):
 

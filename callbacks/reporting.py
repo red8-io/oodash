@@ -1,7 +1,9 @@
-import logging
 from dash.dependencies import Input, Output
 from data_management import DataManager
 from data_quality_reporter import DataQualityReporter
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def register_reporting_callback(app, data_manager: DataManager):
     data_quality_reporter = DataQualityReporter(data_manager)

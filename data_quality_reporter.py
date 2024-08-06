@@ -1,16 +1,18 @@
-import logging
 import pandas as pd
 from dash import html, dash_table
 import ast
 
 from data_management import DataManager
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 class DataQualityReporter:
     def __init__(self, data_manager: DataManager):
         self.data_manager = data_manager
 
     def generate_data_quality_report(self, start_date, end_date):
-        logging.info(f"Generating data quality report from {start_date} to {end_date}")
+        logger.info(f"Generating data quality report from {start_date} to {end_date}")
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
         
@@ -47,7 +49,7 @@ class DataQualityReporter:
         return report
 
     def generate_long_tasks_list(self, start_date, end_date):
-        logging.info(f"Generating long tasks list from {start_date} to {end_date}")
+        logger.info(f"Generating long tasks list from {start_date} to {end_date}")
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
 

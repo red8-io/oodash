@@ -1,18 +1,15 @@
 import os
 from datetime import datetime, timedelta
 import ast
-import logging
 
 import pandas as pd
 
 from dash import dcc, html, dash_table
 from data_management import DataManager
 from llm_integration import check_ollama_status, extract_model_names
+from logging_config import setup_logging
 
-# Configure logging
-logging.basicConfig(level=logging.WARNING,
-                    format='%(asctime)s - %(funcName)s - %(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+logger = setup_logging()
 
 # Function to safely get DataFrame columns and process job_id
 def safe_get_columns(df, columns):
@@ -33,7 +30,7 @@ def safe_unique_values(df, column_name):
     if column_name in df.columns:
         return [{'label': i, 'value': i} for i in sorted(df[column_name].unique()) if pd.notna(i)]
     else:
-        logging.warning(f"Column not found in DataFrame '{column_name}' ")
+        logger.warning(f"Column not found in DataFrame '{column_name}' ")
         return []
 
 def create_login_layout():

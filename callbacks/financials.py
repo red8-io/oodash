@@ -1,4 +1,3 @@
-import logging
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import pandas as pd
@@ -7,6 +6,9 @@ from datetime import datetime
 
 from data_management import DataManager
 from financial_calculator import FinancialCalculator
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def register_financials_callbacks(app, data_manager: DataManager):
     financial_calculator = FinancialCalculator(data_manager)
@@ -58,7 +60,7 @@ def register_financials_callbacks(app, data_manager: DataManager):
                 False
             ]
         except Exception as e:
-            logging.error(f"Error in update_financials: {str(e)}", exc_info=True)
+            logger.error(f"Error in update_financials: {str(e)}", exc_info=True)
             empty_fig = go.Figure()
             return [
                 empty_fig,
