@@ -17,13 +17,6 @@ logger = setup_logging()
 load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
 def create_app():
-    # Initialize DataManager
-    data_manager = DataManager()
-
-    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
-        logger.error("Unable to fetch data from Odoo. Please check your connection and try again.")
-        return None
-
     # Initialize Dash app
     app = dash.Dash(__name__)
 
@@ -53,6 +46,13 @@ def create_app():
             if token:
                 try:
                     token_data = authenticate(token)
+
+                    # Initialize DataManager
+                    data_manager = DataManager()
+
+                    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
+                        logger.error("Unable to fetch data from Odoo. Please check your connection and try again.")
+                        return None
 
                     register_callbacks(app, data_manager)
                     logger.info("Callbacks registered")
