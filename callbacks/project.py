@@ -8,6 +8,7 @@ from logging_config import setup_logging
 logger = setup_logging()
 
 def register_project_callback(app, data_manager: DataManager):
+    logger.info("Registering callback...")
     project_analyser = ProjectAnalyser(data_manager)
 
     @app.callback(

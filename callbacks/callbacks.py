@@ -28,7 +28,7 @@ def register_callbacks(app, data_manager: DataManager):
     register_reporting_callback(app, data_manager)
     register_settings_callbacks(app, data_manager)
     register_pivot_table_callbacks(app, data_manager)
-    logger.info("All callbacks registered")
+    logger.info("Registered all callbacks")
 
     @app.callback(
         [Output('last-update-time', 'children'),
@@ -41,7 +41,6 @@ def register_callbacks(app, data_manager: DataManager):
         State('project-selector', 'options')]
     )
     def refresh_dashboard_data(n_clicks, current_portfolio_options, current_employee_options, current_project_options):
-        logger.info(f"refresh_dashboard_data called. n_clicks: {n_clicks}")
         ctx = dash.callback_context
         if not ctx.triggered:
             logger.info("Initial load")

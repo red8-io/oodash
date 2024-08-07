@@ -23,6 +23,8 @@ def transform_job_costs_for_datatable(job_costs):
     return transformed_data
 
 def register_settings_callbacks(app, data_manager: DataManager):
+    logger.info("Registering callback...")
+
     @app.callback(
         Output('job-costs-save-status', 'children'),
         [Input('save-cost-revenue', 'n_clicks')],

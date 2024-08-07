@@ -11,6 +11,8 @@ from logging_config import setup_logging
 logger = setup_logging()
 
 def register_financials_callbacks(app, data_manager: DataManager):
+    logger.info("Registering callback...")
+
     financial_calculator = FinancialCalculator(data_manager)
 
     @app.callback(

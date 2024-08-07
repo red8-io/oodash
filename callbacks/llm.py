@@ -7,6 +7,7 @@ from logging_config import setup_logging
 logger = setup_logging()
 
 def register_llm_callback(app, data_manager: DataManager):
+    logger.info("Registering callback...")
 
     @app.callback(
         Output('llm-report-output', 'children'),

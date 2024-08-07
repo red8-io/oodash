@@ -8,6 +8,8 @@ from logging_config import setup_logging
 logger = setup_logging()
 
 def register_employees_callbacks(app, data_manager: DataManager):
+    logger.info("Registering callback...")
+
     @app.callback(
         [Output('employee-hours-chart', 'figure'),
         Output('total-hours', 'children')],

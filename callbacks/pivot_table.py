@@ -8,6 +8,8 @@ from logging_config import setup_logging
 logger = setup_logging()
 
 def register_pivot_table_callbacks(app, data_manager: DataManager):
+    logger.info("Registering callback...")
+
     @app.callback(
         [Output('pivot-index-selector', 'options'),
          Output('pivot-columns-selector', 'options'),

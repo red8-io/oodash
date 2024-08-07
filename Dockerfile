@@ -1,6 +1,6 @@
 # Use the official Python slim image
 FROM python:3.12.4-slim
-LABEL version="24.08.07.12.52"
+LABEL version="24.08.07.16.24"
 
 # Set work directory
 WORKDIR /app

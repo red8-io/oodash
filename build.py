@@ -1,5 +1,6 @@
 import os
 import subprocess
+import re
 from datetime import datetime
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -30,18 +31,20 @@ class DockerBuilder:
 
     def update_dockerfile(self, version: AppVersion):
         with open('Dockerfile', 'r') as f:
-            lines = f.readlines()
-
-        updated_lines = []
-        for line in lines:
-            if line.startswith('FROM'):
-                updated_lines.append(line)
-                updated_lines.append(f'LABEL version="{version.version}"\n')
-            else:
-                updated_lines.append(line)
-
+            content = f.read()
+        
+        # Pattern to match the version label
+        pattern = r'LABEL version="[\d\.]+"'
+        replacement = f'LABEL version="{version.version}"'
+        
+        # If the version label exists, replace it; otherwise, add it after the FROM instruction
+        if re.search(pattern, content):
+            updated_content = re.sub(pattern, replacement, content)
+        else:
+            updated_content = re.sub(r'(FROM .*\n)', r'\1' + replacement + '\n', content)
+        
         with open('Dockerfile', 'w') as f:
-            f.writelines(updated_lines)
+            f.write(updated_content)
 
     def build_image(self, version: AppVersion):
         cmd = f"docker buildx build --platform {self.platform} -t {self.image_name}:{version.version} --load ."
