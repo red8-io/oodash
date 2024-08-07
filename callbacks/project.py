@@ -16,8 +16,7 @@ def register_project_callback(app, data_manager: DataManager):
          Output('project-tasks-employees-chart', 'figure'),
          Output('project-total-revenue', 'children'),
          Output('project-period-revenue', 'children')],
-        [Input('token-store', 'data'),
-         Input('project-selector', 'value'),
+        [Input('project-selector', 'value'),
          Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
          Input('employee-filter', 'value'),
@@ -39,17 +38,14 @@ def register_project_callback(app, data_manager: DataManager):
             logger.error(f"Error in update_project_charts: {str(e)}", exc_info=True)
             return go.Figure(), go.Figure(), go.Figure(), f"Error: {str(e)}", ""
 
-    @app.callback(
-        Output('project-selector', 'options'),
-        [Input('token-store', 'data'),
-         Input('data-store', 'data')]
-    )
-    def update_project_options(serialized_data):
-        if serialized_data is None:
-            return []
+    # @app.callback(
+    #     Output('project-selector', 'options')
+    # )
+    # def update_project_options():
+    #     if not data_manager.df_portfolio:
+    #         return []
         
-        data = DataManager.deserialize_dataframes(serialized_data)
-        df_projects = data[0]  # Assuming the first DataFrame is the projects DataFrame
+    #     df_projects = data_manager.df_portfolio
         
-        project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
-        return project_options
+    #     project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
+    #     return project_options

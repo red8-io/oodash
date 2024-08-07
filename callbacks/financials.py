@@ -20,8 +20,7 @@ def register_financials_callbacks(app, data_manager: DataManager):
          Output('all-projects-revenue-chart', 'figure'),
          Output('calculation-progress', 'children'),
          Output('calculate-button', 'disabled')],
-        [Input('token-store', 'data'),
-         Input('date-range', 'start_date'),
+        [Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
          Input('calculate-button', 'n_clicks')]
     )
@@ -30,6 +29,7 @@ def register_financials_callbacks(app, data_manager: DataManager):
         if not ctx.triggered and not data_manager.financials_data:
             empty_fig = go.Figure()
             return [empty_fig, "No data calculated yet", empty_fig, empty_fig, "No data calculated yet", False]
+
         try:
             start_date = pd.to_datetime(start_date)
             end_date = pd.to_datetime(end_date)

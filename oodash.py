@@ -18,7 +18,16 @@ load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
 def create_app():
     # Initialize Dash app
-    app = dash.Dash(__name__)
+    app = dash.Dash(__name__, suppress_callback_exceptions=True)
+
+    # Initialize DataManager
+    data_manager = DataManager()
+
+    login_layout = create_login_layout()
+    logged_in_layout = create_layout(data_manager)
+
+    register_callbacks(app, data_manager)
+    logger.info("Callbacks registered")
 
     # Add a new function to retrieve token from URL
     def serve_layout():
@@ -37,35 +46,22 @@ def create_app():
 
         if href:
             parsed_url = urlparse(href)
-            logger.debug(f"Parsed url {parsed_url}")
             query_params = parse_qs(parsed_url.query)
-            logger.debug(f"Query params {query_params}")
             token = query_params.get('token', [None])[0]
-            logger.debug(f"Token: {token}")
             
             if token:
                 try:
                     token_data = authenticate(token)
 
-                    # Initialize DataManager
-                    data_manager = DataManager()
+                    if token_data:
+                        data_manager.load_all_data()
 
-                    if data_manager.df_portfolio is None or data_manager.df_portfolio.empty:
-                        logger.error("Unable to fetch data from Odoo. Please check your connection and try again.")
-                        return None
+                        return logged_in_layout
 
-                    register_callbacks(app, data_manager)
-                    logger.info("Callbacks registered")
-
-                    return create_layout(data_manager, token)
                 except ValueError as e:
                     logger.info(f"Authentication error: {e}")
-                    return create_login_layout()
-            else:
-                return html.Div("No token provided")
-        else:
-            logger.debug(f"Could not retrieve href")
-            return create_login_layout()
+
+        return login_layout
 
     return app
 

@@ -11,8 +11,7 @@ def register_portfolio_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('portfolio-hours-chart', 'figure'),
          Output('portfolio-tasks-chart', 'figure')],
-        [Input('token-store', 'data'),
-         Input('date-range', 'start_date'),
+        [Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
          Input('project-filter', 'value'),
          Input('portfolio-hours-height', 'value')]

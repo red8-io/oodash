@@ -12,8 +12,7 @@ def register_pivot_table_callbacks(app, data_manager: DataManager):
         [Output('pivot-index-selector', 'options'),
          Output('pivot-columns-selector', 'options'),
          Output('pivot-values-selector', 'options')],
-        [Input('token-store', 'data'),
-         Input('pivot-dataframe-selector', 'value')]
+        [Input('pivot-dataframe-selector', 'value')]
     )
     def update_pivot_selectors(selected_df):
         if not selected_df:
@@ -26,8 +25,7 @@ def register_pivot_table_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('pivot-chart', 'figure'),
          Output('pivot-table-container', 'children')],
-        [Input('token-store', 'data'),
-         Input('pivot-index-selector', 'value'),
+        [Input('pivot-index-selector', 'value'),
          Input('pivot-columns-selector', 'value'),
          Input('pivot-values-selector', 'value'),
          Input('pivot-aggfunc-selector', 'value'),

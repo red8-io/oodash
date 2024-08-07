@@ -11,15 +11,14 @@ def register_global_kpi_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('global-map', 'figure'),
         Output('global-kpi-chart', 'figure')],
-        [Input('token-store', 'data'),
-         Input('date-range', 'start_date'),
+        [Input('date-range', 'start_date'),
         Input('date-range', 'end_date'),
         Input('project-filter', 'value')]
     )
     def update_global_kpi(start_date, end_date, selected_projects):
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
-        
+
         filtered_projects = data_manager.df_portfolio.copy()
         if 'date_start' in data_manager.df_portfolio.columns:
             filtered_projects = filtered_projects[
@@ -28,10 +27,10 @@ def register_global_kpi_callbacks(app, data_manager: DataManager):
             ]
         if selected_projects and 'name' in filtered_projects.columns:
             filtered_projects = filtered_projects[filtered_projects['name'].isin(selected_projects)]
-        
+
         if filtered_projects.empty:
             return go.Figure(), go.Figure()
-        
+
         # Create map figure
         fig_map = go.Figure()
         if 'partner_id' in filtered_projects.columns and 'name' in filtered_projects.columns:

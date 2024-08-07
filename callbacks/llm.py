@@ -10,16 +10,13 @@ def register_llm_callback(app, data_manager: DataManager):
 
     @app.callback(
         Output('llm-report-output', 'children'),
-        [Input('token-store', 'data'),
-         Input('generate-llm-report', 'n_clicks')],
-        [State('model-selection', 'value'),
-         State('data-store', 'data')],
+        [Input('generate-llm-report', 'n_clicks')],
+        [State('model-selection', 'value')],
         prevent_initial_call=True
     )
-    def update_llm_report(n_clicks, selected_model, serialized_data):
-        if n_clicks > 0 and selected_model and serialized_data:
-            data = data_manager.deserialize_dataframes(serialized_data)
-            df_projects, df_employees, df_sales, df_financials, df_timesheet, df_tasks = data
+    def update_llm_report(n_clicks, selected_model):
+        if n_clicks > 0 and selected_model and data_manager.data:
+            df_projects, df_employees, df_sales, df_financials, df_timesheet, df_tasks = data_manager.data
             report = generate_llm_report(df_projects, df_employees, df_sales, df_financials, df_timesheet, df_tasks, selected_model)
             if report.startswith("Error:"):
                 return html.Div([

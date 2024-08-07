@@ -31,14 +31,14 @@ class DataQualityReporter:
                 html.Div([
                     html.Ul([html.Li(project) for project in projects_without_hours], style={'column-count': 2})
                 ], style={'height': '400px', 'overflow': 'auto', 'border': '1px solid #ddd', 'padding': '10px'})
-            ], style={'width': '48%', 'display': 'inline-block', 'vertical-align': 'top'}),
+            ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top'}),
             
             html.Div([
                 html.H4("Employees with no hours logged:"),
                 html.Div([
                     html.Ul([html.Li(employee) for employee in employees_without_hours], style={'column-count': 2})
                 ], style={'height': '400px', 'overflow': 'auto', 'border': '1px solid #ddd', 'padding': '10px'})
-            ], style={'width': '48%', 'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '4%'})
+            ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top', 'marginLeft': '4%'})
         ]))
         
         # Check for inconsistent project status (closed projects with open tasks)

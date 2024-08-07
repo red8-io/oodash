@@ -41,8 +41,11 @@ def create_login_layout():
         html.A("Login", href=login_url, className="login-button")
     ])
 
-def create_layout(data_manager: DataManager, token: str = None):
-        # Process df_employees to extract job titles
+def create_layout(data_manager: DataManager):
+
+    logger.info("Loading layout")
+
+    # Process df_employees to extract job titles
     df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
 
     # Get available models
@@ -58,8 +61,8 @@ def create_layout(data_manager: DataManager, token: str = None):
             html.H1("Oodash", style={'display': 'inline-block'}),
             html.Div([
                 html.Button('Refresh Data', id='refresh-data', n_clicks=0),
-                html.Span(id='last-update-time', style={'margin-left': '10px'})
-            ], style={'float': 'right', 'margin-top': '20px'})
+                html.Span(id='last-update-time', style={'marginLeft': '10px'})
+            ], style={'float': 'right', 'marginTop': '20px'})
         ]),
 
         # Date range selector
@@ -144,7 +147,7 @@ def create_layout(data_manager: DataManager, token: str = None):
                             html.Div([
                                 html.Div(id='project-total-revenue', style={'font-weight': 'bold', 'display': 'inline-block', 'margin-right': '20px'}),
                                 html.Div(id='project-period-revenue', style={'font-weight': 'bold', 'display': 'inline-block'})
-                            ], style={'margin-top': '10px', 'margin-bottom': '10px'}),
+                            ], style={'marginTop': '10px', 'margin-bottom': '10px'}),
                             dcc.Graph(id='project-revenue-chart'),
                             dcc.Graph(id='project-tasks-employees-chart')
                         ]
@@ -285,16 +288,12 @@ def create_layout(data_manager: DataManager, token: str = None):
                             value='bar',
                             placeholder="Select chart type"
                         ),
-                    ], style={'width': '25%', 'display': 'inline-block', 'vertical-align': 'top'}),
+                    ], style={'width': '25%', 'display': 'inline-block', 'verticalAlign': 'top'}),
                     html.Div([
                         dcc.Graph(id='pivot-chart'),
                         html.Div(id='pivot-table-container')
                     ], style={'width': '75%', 'display': 'inline-block'})
                 ])
             ]),
-        ], id='tabs'),
-
-        # Store for holding the current data
-        dcc.Store(id='data-store'),
-        dcc.Store(id='token-store', data=token)
+        ], id='tabs')
     ])

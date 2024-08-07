@@ -9,8 +9,7 @@ logger = setup_logging()
 def register_settings_callbacks(app, data_manager: DataManager):
     @app.callback(
         Output('job-costs-save-status', 'children'),
-        [Input('token-store', 'data'),
-         Input('save-cost-revenue', 'n_clicks')],
+        [Input('save-cost-revenue', 'n_clicks')],
         State('job-costs-table', 'data')
     )
     def save_job_costs_callback(n_clicks, table_data):
@@ -26,8 +25,7 @@ def register_settings_callbacks(app, data_manager: DataManager):
 
     @app.callback(
         Output('job-costs-table', 'data', allow_duplicate=True),
-        [Input('token-store', 'data'),
-         Input('add-job-title', 'n_clicks')],
+        [Input('add-job-title', 'n_clicks')],
         State('job-costs-table', 'data'),
         prevent_initial_call=True
     )
@@ -40,8 +38,7 @@ def register_settings_callbacks(app, data_manager: DataManager):
 
     @app.callback(
         Output('job-costs-table', 'data', allow_duplicate=True),
-        [Input('token-store', 'data'),
-         Input('tabs', 'value')],
+        [Input('tabs', 'value')],
         [State('job-costs-table', 'data')],
         prevent_initial_call=True
     )

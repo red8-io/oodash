@@ -10,8 +10,7 @@ def register_reporting_callback(app, data_manager: DataManager):
 
     @app.callback(
         Output('data-quality-report', 'children'),
-        [Input('token-store', 'data'),
-         Input('date-range', 'start_date'),
+        [Input('date-range', 'start_date'),
         Input('date-range', 'end_date')]
     )
     def update_data_quality_report(start_date, end_date):
@@ -19,8 +18,7 @@ def register_reporting_callback(app, data_manager: DataManager):
 
     @app.callback(
         Output('long-tasks-list', 'children'),
-        [Input('token-store', 'data'),
-         Input('date-range', 'start_date'),
+        [Input('date-range', 'start_date'),
         Input('date-range', 'end_date')]
     )
     def update_long_tasks_list(start_date, end_date):

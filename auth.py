@@ -34,11 +34,13 @@ def verify_token(token: str):
     )
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        logger.debug(payload)
 
         email: str = payload.get("sub")
         role: str = payload.get("role")
         exp: int = payload.get("exp")
+
+        logger.debug(f"{email}, {role}, {exp}")
+
         if email is None:
             raise credentials_exception
         token_data = TokenData(email=email, role=role, exp=exp)

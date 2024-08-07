@@ -27,10 +27,12 @@ class DataManager:
     financials_data: Dict = field(default_factory=dict)
     last_update: Optional[datetime] = None
     data_loaded: bool = field(default_factory=bool)
+    data = None
 
     def __post_init__(self):
         self.data_loaded = False
-        self.load_all_data()
+        self.data = None
+        # self.load_all_data() # delay data loading for after the login
 
     def load_all_data(self, force: bool = False):
         if self.data_loaded and not force:
@@ -38,8 +40,8 @@ class DataManager:
             return
         
         logger.info('Loading data with force = %s', force)
-        data, self.last_update = self.load_or_fetch_data(force)
-        self.df_portfolio, self.df_employees, self.df_sales, self.df_timesheet, self.df_tasks = data
+        self.data, self.last_update = self.load_or_fetch_data(force)
+        self.df_portfolio, self.df_employees, self.df_sales, self.df_timesheet, self.df_tasks = self.data
         self.job_costs = self.load_job_costs()
         self.financials_data = self.load_financials_data()
 
@@ -48,6 +50,7 @@ class DataManager:
         self.data_loaded = True
 
         self.print_data_summary()
+        logger.info("All data loaded successfully")
 
     def process_job_titles(self):
         if 'job_title' in self.df_employees.columns:
@@ -78,13 +81,19 @@ class DataManager:
         logger.info(f"Last Update: {self.last_update}")
         logger.info("--- End of Summary ---\n")
 
-    @staticmethod
-    def serialize_dataframes(data: List[pd.DataFrame]) -> List[Dict]:
-        return [df.to_dict(orient='records') if not df.empty else {} for df in data]
+    def serialise_dataframes(self) -> List[Dict]:
+        """
+        Read from list of dataframes and output list of dictionaries.
+        """
+        return [df.to_dict(orient='records') if not df.empty else {} for df in self.data]
 
-    @staticmethod
-    def deserialize_dataframes(data: List[Dict]) -> List[pd.DataFrame]:
-        return [pd.DataFrame(df_data) if df_data else pd.DataFrame() for df_data in data]
+    def deserialise_dataframes(self, data: List[Dict]) -> List[pd.DataFrame]:
+        """
+        Read from list of dictionaries and output list of dataframes
+        """
+        self.data = [pd.DataFrame(df_data) if df_data else pd.DataFrame() for df_data in data]
+    
+        return self.data
 
     def get_last_update_time(self) -> Optional[datetime]:
         if os.path.exists(self.LAST_UPDATE_FILE):
@@ -101,15 +110,14 @@ class DataManager:
         if os.path.exists(self.DATA_FILE):
             with open(self.DATA_FILE, 'rb') as f:
                 data = pickle.load(f)
-            return self.deserialize_dataframes(data)
+            return self.deserialise_dataframes(data)
         return None
 
     def save_cached_data(self, data: List[pd.DataFrame]):
         with open(self.DATA_FILE, 'wb') as f:
-            pickle.dump(self.serialize_dataframes(data), f)
+            pickle.dump(self.serialise_dataframes(), f)
 
-    @staticmethod
-    def merge_new_data(old_data: List[pd.DataFrame], new_data: List[pd.DataFrame]) -> List[pd.DataFrame]:
+    def merge_new_data(self, old_data: List[pd.DataFrame], new_data: List[pd.DataFrame]) -> List[pd.DataFrame]:
         merged_data = []
         for old_df, new_df in zip(old_data, new_data):
             for df in [old_df, new_df]:
