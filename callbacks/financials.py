@@ -22,9 +22,11 @@ def register_financials_callbacks(app, data_manager: DataManager):
          Output('calculate-button', 'disabled')],
         [Input('date-range', 'start_date'),
          Input('date-range', 'end_date'),
-         Input('calculate-button', 'n_clicks')]
+         Input('calculate-button', 'n_clicks'),
+         Input('project-filter', 'value'),
+         Input('employee-filter', 'value')]
     )
-    def update_financials(start_date, end_date, n_clicks):
+    def update_financials(start_date, end_date, n_clicks, selected_projects, selected_employees):
         ctx = dash.callback_context
         if not ctx.triggered and not data_manager.financials_data:
             empty_fig = go.Figure()
@@ -45,11 +47,30 @@ def register_financials_callbacks(app, data_manager: DataManager):
                 empty_fig = go.Figure()
                 return empty_fig, "No data available", empty_fig, empty_fig, "No data available. Please check your date range."
 
-            fig_financials = financial_calculator.create_financials_chart(financials_data)
-            fig_hours = financial_calculator.create_hours_chart(financials_data)
-            fig_revenue = financial_calculator.create_revenue_chart(financials_data)
+            # Filter the data based on selected projects and employees
+            filtered_data = {}
+            for project, data in financials_data.items():
+                if selected_projects and project not in selected_projects:
+                    continue
+                
+                daily_data = pd.DataFrame(data['daily_data'])
+                if selected_employees:
+                    daily_data = daily_data[daily_data['employee_name'].apply(lambda x: any(emp in x for emp in selected_employees))]
+                
+                if not daily_data.empty:
+                    filtered_data[project] = {
+                        'total_revenue': daily_data['revenue'].sum() if 'revenue' in daily_data.columns else data['total_revenue'],
+                        'total_hours': daily_data['unit_amount'].sum(),
+                        'daily_data': daily_data.to_dict('records')
+                    }
 
-            total_revenue = sum(project_data['total_revenue'] for project_data in financials_data.values())
+            # Create charts using the filtered data
+            fig_financials = financial_calculator.create_financials_chart(filtered_data)
+            fig_hours = financial_calculator.create_hours_chart(filtered_data)
+            fig_revenue = financial_calculator.create_revenue_chart(filtered_data)
+
+            # Calculate total revenue based on filtered data
+            total_revenue = sum(project_data['total_revenue'] for project_data in filtered_data.values())
 
             return [
                 fig_financials,
