@@ -96,3 +96,32 @@ def register_settings_callbacks(app, data_manager: DataManager):
         table_data = df.to_dict('records')
         
         return table_data
+
+    @app.callback(
+        Output('employees-job-titles-table', 'data'),
+        [Input('tabs', 'value')]
+    )
+    def update_employees_job_titles_table(current_tab):
+        if current_tab != 'Settings':
+            return dash.no_update
+
+        # Process df_employees to extract job titles
+        df_employees_processed = data_manager.df_employees.copy()
+        
+        if 'job_id' in df_employees_processed.columns:
+            df_employees_processed['job_id_original'] = df_employees_processed['job_id']
+            df_employees_processed['job_id'] = df_employees_processed['job_id_original'].apply(
+                lambda x: x[0] if isinstance(x, (list, tuple)) and len(x) > 0 else x
+            )
+            df_employees_processed['job_title'] = df_employees_processed['job_id_original'].apply(
+                lambda x: x[1] if isinstance(x, (list, tuple)) and len(x) > 1 else ''
+            )
+            df_employees_processed.drop('job_id_original', axis=1, inplace=True)
+        
+        # Select only the required columns
+        df_employees_processed = df_employees_processed[['name', 'job_id', 'job_title']]
+        
+        # Convert to list of dictionaries for the DataTable
+        table_data = df_employees_processed.to_dict('records')
+        
+        return table_data

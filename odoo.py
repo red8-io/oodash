@@ -21,8 +21,10 @@ models = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object', allow_none=True)
 
 def fetch_odoo_data(model, fields, domain=[], limit=None):
     try:
+        logger.info(f"Fetching: {model}")
         result = models.execute_kw(db, uid, api_key, model, 'search_read', [domain, fields], {'limit': limit})
         cleaned_result = [{k: v for k, v in record.items() if v is not None} for record in result]
+        logger.info(f"Fetched: {model}")
         return cleaned_result
     except Exception as err:
         logger.error(f"Error fetching data from Odoo, model {model}, fields {fields}, domain {domain}, limit {limit}: {err}")
@@ -103,7 +105,7 @@ def fetch_and_process_data(last_update=None):
         return df_portfolio, df_employees, df_sales, df_timesheet, df_tasks
     except Exception as e:
         logger.error(f"Error in fetch_and_process_data: {e}")
-        return None, None, None, None, None, None
+        return None, None, None, None, None
 
 if __name__ == "__main__":
     # For testing purposes

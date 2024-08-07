@@ -7,7 +7,7 @@ def setup_logging(level=logging.INFO):
     logger.setLevel(level)
 
     # Create a formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(funcName)s - %(message)s')
 
     # Create a stream handler for stdout
     handler = logging.StreamHandler(sys.stdout)

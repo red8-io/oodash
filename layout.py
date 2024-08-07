@@ -27,6 +27,10 @@ def safe_get_columns(df, columns):
 
 # Function to safely get unique values from a DataFrame column
 def safe_unique_values(df, column_name):
+    if df.empty:
+        logger.warning('Data is probably being loaded')
+        return
+
     if column_name in df.columns:
         return [{'label': i, 'value': i} for i in sorted(df[column_name].unique()) if pd.notna(i)]
     else:
@@ -231,7 +235,7 @@ def create_layout(data_manager: DataManager):
                                 {'name': 'Job ID', 'id': 'job_id'},
                                 {'name': 'Job Title', 'id': 'job_title'}
                             ],
-                            data=df_employees_processed.to_dict('records'),
+                            data=[],  # Initialize with an empty list
                             style_table={'height': '300px', 'overflowY': 'auto'},
                             style_cell={'textAlign': 'left'},
                             style_header={
