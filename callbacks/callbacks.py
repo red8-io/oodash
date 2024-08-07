@@ -31,7 +31,7 @@ def register_callbacks(app, data_manager: DataManager):
     logger.info("All callbacks registered")
 
     @app.callback(
-        [Output('last-update-time', 'children')],
+        Output('last-update-time', 'children'),
         [Input('refresh-data', 'n_clicks')]
     )
     def refresh_dashboard_data(n_clicks):
@@ -54,20 +54,19 @@ def register_callbacks(app, data_manager: DataManager):
             logger.warning("Data is empty")
             return "Failed to update data"
 
-    # @app.callback(
-    #     [Output('project-filter', 'options'),
-    #      Output('employee-filter', 'options')],
-    #      [Input('project-filter', 'options')]
-    # )
-    # def update_filter_options():
+    @app.callback(
+        [Output('project-filter', 'options'),
+         Output('employee-filter', 'options')]
+    )
+    def update_filter_options():
 
-    #     if data_manager.data is None:
-    #         return [], []
+        if data_manager.data is None:
+            return [], []
 
-    #     df_projects, df_employees = data_manager.data[:2]
-    #     project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
-    #     employee_options = [{'label': i, 'value': i} for i in df_employees['name'].unique() if pd.notna(i)]
-    #     return project_options, employee_options
+        df_projects, df_employees = data_manager.data[:2]
+        project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
+        employee_options = [{'label': i, 'value': i} for i in df_employees['name'].unique() if pd.notna(i)]
+        return project_options, employee_options
 
     @app.callback(
         Output('project-filter', 'disabled'),

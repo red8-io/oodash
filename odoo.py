@@ -62,11 +62,11 @@ def fetch_and_process_data(last_update=None):
         df_tasks = validate_dataframe(pd.DataFrame(tasks), ['project_id', 'stage_id', 'create_date', 'date_end'])
 
         # Print column names for debugging
-        logger.info("df_portfolio columns: %d", df_portfolio.columns)
-        logger.info("df_employees columns: %d", df_employees.columns)
-        logger.info("df_sales columns: %d", df_sales.columns)
-        logger.info("df_timesheet columns: %d", df_timesheet.columns)
-        logger.info("df_tasks columns: %d", df_tasks.columns)
+        logger.info("df_portfolio columns: %s", df_portfolio.columns)
+        logger.info("df_employees columns: %s", df_employees.columns)
+        logger.info("df_sales columns: %s", df_sales.columns)
+        logger.info("df_timesheet columns: %s", df_timesheet.columns)
+        logger.info("df_tasks columns: %s", df_tasks.columns)
 
         # Convert date columns to datetime
         date_columns = {

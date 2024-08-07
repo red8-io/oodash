@@ -81,10 +81,14 @@ class DataManager:
         logger.info(f"Last Update: {self.last_update}")
         logger.info("--- End of Summary ---\n")
 
-    def serialise_dataframes(self) -> List[Dict]:
+    def serialise_dataframes(self, data = None) -> List[Dict]:
         """
         Read from list of dataframes and output list of dictionaries.
         """
+
+        if data:
+            self.data = data
+
         return [df.to_dict(orient='records') if not df.empty else {} for df in self.data]
 
     def deserialise_dataframes(self, data: List[Dict]) -> List[pd.DataFrame]:
@@ -115,7 +119,7 @@ class DataManager:
 
     def save_cached_data(self, data: List[pd.DataFrame]):
         with open(self.DATA_FILE, 'wb') as f:
-            pickle.dump(self.serialise_dataframes(), f)
+            pickle.dump(self.serialise_dataframes(data), f)
 
     def merge_new_data(self, old_data: List[pd.DataFrame], new_data: List[pd.DataFrame]) -> List[pd.DataFrame]:
         merged_data = []
