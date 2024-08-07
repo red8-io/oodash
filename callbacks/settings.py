@@ -1,4 +1,5 @@
 import pandas as pd
+import ast
 from dash.dependencies import Input, Output, State
 from dash import html
 import dash
@@ -105,9 +106,9 @@ def register_settings_callbacks(app, data_manager: DataManager):
         if current_tab != 'Settings':
             return dash.no_update
 
-        # Process df_employees to extract job titles
-        df_employees_processed = data_manager.df_employees.copy()
-        
+        # Use safe_get_columns to process df_employees
+        df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
+
         if 'job_id' in df_employees_processed.columns:
             df_employees_processed['job_id_original'] = df_employees_processed['job_id']
             df_employees_processed['job_id'] = df_employees_processed['job_id_original'].apply(
@@ -125,3 +126,17 @@ def register_settings_callbacks(app, data_manager: DataManager):
         table_data = df_employees_processed.to_dict('records')
         
         return table_data
+    
+    # Function to safely get DataFrame columns and process job_id
+def safe_get_columns(df, columns):
+    result = df[[col for col in columns if col in df.columns]].copy()
+    if 'job_id' in result.columns:
+        result['job_id_original'] = result['job_id']
+        result['job_id'] = result['job_id_original'].apply(
+            lambda x: ast.literal_eval(str(x))[0] if isinstance(x, (list, str)) and str(x).startswith('[') else x
+        )
+        result['job_title'] = result['job_id_original'].apply(
+            lambda x: ast.literal_eval(str(x))[1] if isinstance(x, (list, str)) and str(x).startswith('[') else ''
+        )
+        result.drop('job_id_original', axis=1, inplace=True)
+    return result

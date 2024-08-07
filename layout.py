@@ -1,6 +1,5 @@
 import os
 from datetime import datetime, timedelta
-import ast
 
 import pandas as pd
 
@@ -11,25 +10,11 @@ from logging_config import setup_logging
 
 logger = setup_logging()
 
-# Function to safely get DataFrame columns and process job_id
-def safe_get_columns(df, columns):
-    result = df[[col for col in columns if col in df.columns]].copy()
-    if 'job_id' in result.columns:
-        result['job_id_original'] = result['job_id']
-        result['job_id'] = result['job_id_original'].apply(
-            lambda x: ast.literal_eval(str(x))[0] if isinstance(x, (list, str)) and str(x).startswith('[') else x
-        )
-        result['job_title'] = result['job_id_original'].apply(
-            lambda x: ast.literal_eval(str(x))[1] if isinstance(x, (list, str)) and str(x).startswith('[') else ''
-        )
-        result.drop('job_id_original', axis=1, inplace=True)
-    return result
-
 # Function to safely get unique values from a DataFrame column
 def safe_unique_values(df, column_name):
     if df.empty:
         logger.warning('Data is probably being loaded')
-        return
+        return []
 
     if column_name in df.columns:
         return [{'label': i, 'value': i} for i in sorted(df[column_name].unique()) if pd.notna(i)]
@@ -48,9 +33,6 @@ def create_login_layout():
 def create_layout(data_manager: DataManager):
 
     logger.info("Loading layout")
-
-    # Process df_employees to extract job titles
-    df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
 
     # Get available models
     ollama_running, available_models = check_ollama_status()
