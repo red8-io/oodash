@@ -31,10 +31,14 @@ def register_callbacks(app, data_manager: DataManager):
     logger.info("All callbacks registered")
 
     @app.callback(
-        Output('last-update-time', 'children'),
-        [Input('refresh-data', 'n_clicks')]
+        [Output('last-update-time', 'children'),
+        Output('project-filter', 'options'),
+        Output('employee-filter', 'options')],
+        [Input('refresh-data', 'n_clicks')],
+        [State('project-filter', 'options'),
+        State('employee-filter', 'options')]
     )
-    def refresh_dashboard_data(n_clicks):
+    def refresh_dashboard_data(n_clicks, current_project_options, current_employee_options):
         logger.info(f"refresh_dashboard_data called. n_clicks: {n_clicks}")
         ctx = dash.callback_context
         if not ctx.triggered:
@@ -49,24 +53,17 @@ def register_callbacks(app, data_manager: DataManager):
             
             last_update = f"Last updated: {data_manager.last_update.strftime('%Y-%m-%d %H:%M:%S')}"
             logger.info(f"Returning data and {last_update}")
-            return last_update
+
+            df_projects = data_manager.df_portfolio
+            df_employees = data_manager.df_employees
+
+            project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
+            employee_options = [{'label': i, 'value': i} for i in df_employees['name'].unique() if pd.notna(i)]
+
+            return last_update, project_options, employee_options
         else:
             logger.warning("Data is empty")
-            return "Failed to update data"
-
-    @app.callback(
-        [Output('project-filter', 'options'),
-         Output('employee-filter', 'options')]
-    )
-    def update_filter_options():
-
-        if data_manager.data is None:
-            return [], []
-
-        df_projects, df_employees = data_manager.data[:2]
-        project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
-        employee_options = [{'label': i, 'value': i} for i in df_employees['name'].unique() if pd.notna(i)]
-        return project_options, employee_options
+            return "Failed to update data", current_project_options, current_employee_options
 
     @app.callback(
         Output('project-filter', 'disabled'),
