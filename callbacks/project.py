@@ -37,15 +37,3 @@ def register_project_callback(app, data_manager: DataManager):
         except Exception as e:
             logger.error(f"Error in update_project_charts: {str(e)}", exc_info=True)
             return go.Figure(), go.Figure(), go.Figure(), f"Error: {str(e)}", ""
-
-    # @app.callback(
-    #     Output('project-selector', 'options')
-    # )
-    # def update_project_options():
-    #     if not data_manager.df_portfolio:
-    #         return []
-        
-    #     df_projects = data_manager.df_portfolio
-        
-    #     project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
-    #     return project_options

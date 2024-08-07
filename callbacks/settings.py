@@ -1,3 +1,4 @@
+import pandas as pd
 from dash.dependencies import Input, Output, State
 from dash import html
 import dash
@@ -5,6 +6,20 @@ from data_management import DataManager
 from logging_config import setup_logging
 
 logger = setup_logging()
+
+def transform_job_costs_for_datatable(job_costs):
+    """
+    Transform the job_costs dictionary into a list of dictionaries
+    suitable for use in a DataTable.
+    """
+    transformed_data = []
+    for job_title, costs in job_costs.items():
+        transformed_data.append({
+            'job_title': job_title,
+            'cost': costs['cost'],
+            'revenue': costs['revenue']
+        })
+    return transformed_data
 
 def register_settings_callbacks(app, data_manager: DataManager):
     @app.callback(
@@ -39,15 +54,15 @@ def register_settings_callbacks(app, data_manager: DataManager):
     @app.callback(
         Output('job-costs-table', 'data', allow_duplicate=True),
         [Input('tabs', 'value')],
-        [State('job-costs-table', 'data')],
         prevent_initial_call=True
     )
-    def update_job_costs_table(current_tab, current_data):
+    def update_job_costs_table(current_tab):
         if current_tab != 'Settings':
             return dash.no_update
 
         # Get all job titles from current data
-        all_job_titles = set(item['job_title'] for item in current_data if item['job_title'])
+        
+        all_job_titles = set(data_manager.job_costs.keys())
 
         # Get job titles from employees
         employee_job_titles = set()
@@ -63,11 +78,21 @@ def register_settings_callbacks(app, data_manager: DataManager):
         # If there are no job titles, return the current data
         if not unique_job_titles:
             logger.warning("No job titles found. Returning current data.")
-            return current_data
+            return data_manager.job_costs
 
-        # Filter job costs data, but keep all entries if no matching job titles
-        filtered_job_costs = [cost for cost in current_data if cost['job_title'] in unique_job_titles] or current_data
+        # Filter the job costs
+        filtered_job_costs = {title: cost for title, cost in data_manager.job_costs.items() if title in unique_job_titles}
 
-        logger.debug(f"Filtered job costs: {filtered_job_costs}")
-
-        return filtered_job_costs
+        job_costs_data = transform_job_costs_for_datatable(filtered_job_costs)
+        
+        # Convert to DataFrame for easier manipulation if needed
+        df = pd.DataFrame(job_costs_data)
+        
+        # You can perform additional operations on the DataFrame here if needed
+        # For example, sorting:
+        df = df.sort_values('job_title')
+        
+        # Convert back to list of dictionaries for the DataTable
+        table_data = df.to_dict('records')
+        
+        return table_data

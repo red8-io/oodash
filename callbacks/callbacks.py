@@ -33,7 +33,8 @@ def register_callbacks(app, data_manager: DataManager):
     @app.callback(
         [Output('last-update-time', 'children'),
         Output('project-filter', 'options'),
-        Output('employee-filter', 'options')],
+        Output('employee-filter', 'options'),
+        Output('project-selector', 'options')],
         [Input('refresh-data', 'n_clicks')],
         [State('project-filter', 'options'),
         State('employee-filter', 'options')]
@@ -60,10 +61,10 @@ def register_callbacks(app, data_manager: DataManager):
             project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
             employee_options = [{'label': i, 'value': i} for i in df_employees['name'].unique() if pd.notna(i)]
 
-            return last_update, project_options, employee_options
+            return last_update, project_options, employee_options, project_options
         else:
             logger.warning("Data is empty")
-            return "Failed to update data", current_project_options, current_employee_options
+            return "Failed to update data", current_project_options, current_employee_options, current_project_options
 
     @app.callback(
         Output('project-filter', 'disabled'),
