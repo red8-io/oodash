@@ -1,0 +1,3 @@
+IMAGE_NAME=oodash
+PLATFORM=linux/amd64
+VERSION_FILE=cfg/version.txt

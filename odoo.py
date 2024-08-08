@@ -1,8 +1,10 @@
 import os
 import xmlrpc.client
-import logging
 import pandas as pd
 from dotenv import load_dotenv, find_dotenv
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 load_dotenv(find_dotenv(filename='cfg/.env', raise_error_if_not_found=True))
 
@@ -19,11 +21,13 @@ models = xmlrpc.client.ServerProxy(f'{url}/xmlrpc/2/object', allow_none=True)
 
 def fetch_odoo_data(model, fields, domain=[], limit=None):
     try:
+        logger.info(f"Fetching: {model}")
         result = models.execute_kw(db, uid, api_key, model, 'search_read', [domain, fields], {'limit': limit})
         cleaned_result = [{k: v for k, v in record.items() if v is not None} for record in result]
+        logger.info(f"Fetched: {model}")
         return cleaned_result
     except Exception as err:
-        logging.error(f"Error fetching data from Odoo, model {model}, fields {fields}, domain {domain}, limit {limit}: {err}")
+        logger.error(f"Error fetching data from Odoo, model {model}, fields {fields}, domain {domain}, limit {limit}: {err}")
         return []
 
 def validate_dataframe(df, required_columns):
@@ -60,11 +64,11 @@ def fetch_and_process_data(last_update=None):
         df_tasks = validate_dataframe(pd.DataFrame(tasks), ['project_id', 'stage_id', 'create_date', 'date_end'])
 
         # Print column names for debugging
-        logging.info("df_portfolio columns:", df_portfolio.columns)
-        logging.info("df_employees columns:", df_employees.columns)
-        logging.info("df_sales columns:", df_sales.columns)
-        logging.info("df_timesheet columns:", df_timesheet.columns)
-        logging.info("df_tasks columns:", df_tasks.columns)
+        logger.info("df_portfolio columns: %s", df_portfolio.columns)
+        logger.info("df_employees columns: %s", df_employees.columns)
+        logger.info("df_sales columns: %s", df_sales.columns)
+        logger.info("df_timesheet columns: %s", df_timesheet.columns)
+        logger.info("df_tasks columns: %s", df_tasks.columns)
 
         # Convert date columns to datetime
         date_columns = {
@@ -100,14 +104,14 @@ def fetch_and_process_data(last_update=None):
 
         return df_portfolio, df_employees, df_sales, df_timesheet, df_tasks
     except Exception as e:
-        logging.error(f"Error in fetch_and_process_data: {e}")
-        return None, None, None, None, None, None
+        logger.error(f"Error in fetch_and_process_data: {e}")
+        return None, None, None, None, None
 
 if __name__ == "__main__":
     # For testing purposes
     data = fetch_and_process_data()
     for df in data:
         if df is not None:
-            logging.info(df.head())
+            logger.info(df.head())
         else:
-            logging.info("None")
+            logger.info("None")

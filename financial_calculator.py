@@ -1,35 +1,37 @@
-import logging
 import ast
 import pandas as pd
 import plotly.graph_objs as go
 from datetime import datetime
 
 from data_management import DataManager
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 class FinancialCalculator:
     def __init__(self, data_manager: DataManager):
         self.data_manager = data_manager
 
     def calculate_all_financials(self, start_date, end_date):
-        logging.info("Calculating all financials")
+        logger.info("Calculating all financials")
         
         financials_data = {}
         
         date_column = next((col for col in self.data_manager.df_timesheet.columns if 'date' in col.lower()), None)
         if not date_column:
-            logging.error("No date column found in timesheet data")
+            logger.error("No date column found in timesheet data")
             return financials_data
         
         try:
             self.data_manager.df_timesheet[date_column] = pd.to_datetime(self.data_manager.df_timesheet[date_column], errors='coerce')
             self.data_manager.df_timesheet = self.data_manager.df_timesheet.dropna(subset=[date_column])
         except Exception as e:
-            logging.error(f"Error converting date column to datetime: {str(e)}")
+            logger.error(f"Error converting date column to datetime: {str(e)}")
             return financials_data
         
         for _, project in self.data_manager.df_portfolio.iterrows():
             project_name = project['name']
-            logging.info(f"Calculating financials for project: {project_name}")
+            logger.info(f"Calculating financials for project: {project_name}")
             project_timesheet = self.data_manager.df_timesheet[
                 (self.data_manager.df_timesheet['project_name'] == project_name) &
                 (self.data_manager.df_timesheet[date_column] >= start_date) &
@@ -37,7 +39,7 @@ class FinancialCalculator:
             ].copy()
             
             if project_timesheet.empty:
-                logging.warning(f"No timesheet data for project: {project_name}")
+                logger.warning(f"No timesheet data for project: {project_name}")
                 continue
             
             project_revenue = self.calculate_project_revenue(project_timesheet, self.data_manager.df_employees, self.data_manager.job_costs)
@@ -61,7 +63,7 @@ class FinancialCalculator:
             
             financials_data[project_name] = project_financials
         
-        logging.info(f"Financials calculated for {len(financials_data)} projects")
+        logger.info(f"Financials calculated for {len(financials_data)} projects")
         return financials_data
 
     def calculate_project_revenue(self, timesheet_data, employees_data, job_costs):
@@ -69,7 +71,7 @@ class FinancialCalculator:
         for _, row in timesheet_data.iterrows():
             employee_data = employees_data[employees_data['name'] == row['employee_name']]
             if employee_data.empty:
-                logging.warning(f"Employee {row} not found in employees data")
+                logger.warning(f"Employee {row} not found in employees data")
                 continue
             
             employee = employee_data.iloc[0]
@@ -80,7 +82,7 @@ class FinancialCalculator:
             try:
                 daily_revenue = float(job_cost_data.get('revenue') or 0)
             except (ValueError, AttributeError):
-                logging.warning(f"Invalid revenue data for job title: {job_title}")
+                logger.warning(f"Invalid revenue data for job title: {job_title}")
                 daily_revenue = 0
             
             entry_revenue = (row['unit_amount'] / 8) * daily_revenue
@@ -88,7 +90,7 @@ class FinancialCalculator:
         return revenue
 
     def create_financials_chart(self, financials_data):
-        logging.info("Creating financials chart")
+        logger.info("Creating financials chart")
         fig = go.Figure()
         
         all_daily_data = []
@@ -96,11 +98,11 @@ class FinancialCalculator:
         for project, data in financials_data.items():
             daily_data = pd.DataFrame(data['daily_data'])
             if daily_data.empty:
-                logging.warning(f"No daily data for project: {project}")
+                logger.warning(f"No daily data for project: {project}")
                 continue
             
             if 'revenue' not in daily_data.columns:
-                logging.debug(f"Calculating daily revenue for project: {project}")
+                logger.debug(f"Calculating daily revenue for project: {project}")
                 daily_data['revenue'] = daily_data.apply(
                     lambda row: self.calculate_project_revenue(
                         self.data_manager.df_timesheet[
@@ -113,24 +115,24 @@ class FinancialCalculator:
                     axis=1
                 )
             
-            logging.debug(f"Daily revenue for {project}: {daily_data['revenue'].sum()}")
+            logger.debug(f"Daily revenue for {project}: {daily_data['revenue'].sum()}")
             
             daily_data['project'] = project
             all_daily_data.append(daily_data)
         
         if not all_daily_data:
-            logging.warning("No daily data available for any project")
+            logger.warning("No daily data available for any project")
             return fig
         
         all_daily_data = pd.concat(all_daily_data)
-        logging.info(f"Total daily data rows: {len(all_daily_data)}")
+        logger.info(f"Total daily data rows: {len(all_daily_data)}")
         
         pivoted_data = all_daily_data.pivot(index='date', columns='project', values='revenue').fillna(0)
-        logging.info(f"Pivoted data shape: {pivoted_data.shape}")
+        logger.info(f"Pivoted data shape: {pivoted_data.shape}")
 
         for project in pivoted_data.columns:
             project_revenue = pivoted_data[project].sum()
-            logging.info(f"Total revenue for {project}: {project_revenue}")
+            logger.info(f"Total revenue for {project}: {project_revenue}")
             fig.add_trace(go.Bar(
                 x=pivoted_data.index,
                 y=pivoted_data[project],
@@ -159,13 +161,13 @@ class FinancialCalculator:
         return fig
 
     def create_hours_chart(self, financials_data):
-        logging.info("Creating hours chart")
+        logger.info("Creating hours chart")
         fig = go.Figure()
         
         for project, data in financials_data.items():
             daily_data = pd.DataFrame(data['daily_data'])
             if daily_data.empty:
-                logging.warning(f"No daily data for project: {project}")
+                logger.warning(f"No daily data for project: {project}")
                 continue
             
             date_column = daily_data.columns[0]
@@ -183,18 +185,18 @@ class FinancialCalculator:
             barmode='stack'
         )
         
-        logging.info("Hours chart created")
+        logger.info("Hours chart created")
         return fig
 
     def create_revenue_chart(self, financials_data):
-        logging.info("Creating revenue chart")
+        logger.info("Creating revenue chart")
         fig = go.Figure()
         
         projects = list(financials_data.keys())
         revenues = [data['total_revenue'] for data in financials_data.values()]
         
-        logging.info(f"Projects: {projects}")
-        logging.info(f"Revenues: {revenues}")
+        logger.info(f"Projects: {projects}")
+        logger.info(f"Revenues: {revenues}")
         
         fig.add_trace(go.Bar(
             x=projects,
@@ -211,7 +213,7 @@ class FinancialCalculator:
             barmode='stack'
         )
         
-        logging.info("Revenue chart created")
+        logger.info("Revenue chart created")
         return fig
 
     @staticmethod
@@ -221,10 +223,10 @@ class FinancialCalculator:
                 job_id_list = ast.literal_eval(employee['job_id'])
                 return job_id_list[1] if len(job_id_list) > 1 else 'Unknown'
             except (ValueError, SyntaxError, IndexError) as e:
-                logging.error(f"Job title not found: {e}")
+                logger.error(f"Job title not found: {e}")
                 return 'Unknown'
         elif 'job_title' in employee:
             return employee['job_title']
         else:
-            logging.warning(f"Job title not found: {employee}")
+            logger.warning(f"Job title not found: {employee}")
             return 'Unknown'

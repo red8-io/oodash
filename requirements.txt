@@ -1,5 +1,8 @@
+flask
 dash
 dash_table
+dash-core-components
+dash-html-components
 dash-bootstrap-components
 plotly
 pandas
@@ -7,6 +10,6 @@ python-dotenv
 langchain
 langchain_community
 ollama
+pyjwt
 python-jose[cryptography]
 fastapi
-jinja2

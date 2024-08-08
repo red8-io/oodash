@@ -1,11 +1,15 @@
-import logging
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import pandas as pd
 
 from data_management import DataManager
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def register_employees_callbacks(app, data_manager: DataManager):
+    logger.info("Registering callback...")
+
     @app.callback(
         [Output('employee-hours-chart', 'figure'),
         Output('total-hours', 'children')],
@@ -18,33 +22,33 @@ def register_employees_callbacks(app, data_manager: DataManager):
     def update_employee_hours(start_date, end_date, selected_projects, selected_employees, chart_height):
         start_date = pd.to_datetime(start_date)
         end_date = pd.to_datetime(end_date)
-        
+
         filtered_timesheet = data_manager.df_timesheet[
             (data_manager.df_timesheet['date'] >= start_date) &
             (data_manager.df_timesheet['date'] <= end_date)
         ]
-        
+
         if selected_projects:
             filtered_timesheet = filtered_timesheet[filtered_timesheet['project_name'].isin(selected_projects)]
-        
+
         if selected_employees:
             filtered_timesheet = filtered_timesheet[filtered_timesheet['employee_name'].isin(selected_employees)]
-        
+
         employee_hours = filtered_timesheet.groupby(['employee_name', 'project_name'])['unit_amount'].sum().reset_index()
         employee_hours['unit_amount'] = employee_hours['unit_amount'].round().astype(int)
-        
+
         total_hours = employee_hours['unit_amount'].sum()
-        
+
         sorted_employees = sorted(employee_hours['employee_name'].unique())
-        
+
         fig = go.Figure()
         for project in employee_hours['project_name'].unique():
             project_data = employee_hours[employee_hours['project_name'] == project]
-            
+
             full_data = pd.DataFrame({'employee_name': sorted_employees})
             full_data = full_data.merge(project_data, on='employee_name', how='left')
             full_data['unit_amount'] = full_data['unit_amount'].fillna(0)
-            
+
             fig.add_trace(go.Bar(
                 x=full_data['employee_name'],
                 y=full_data['unit_amount'],
@@ -53,7 +57,7 @@ def register_employees_callbacks(app, data_manager: DataManager):
                 textposition='auto',
                 hovertemplate='<b>Employee:</b> %{x}<br><b>Project:</b> ' + project + '<br><b>Hours:</b> %{y}<extra></extra>'
             ))
-        
+
         fig.update_layout(
             barmode='stack',
             title='Employee Hours per Project',
@@ -79,7 +83,7 @@ def register_employees_callbacks(app, data_manager: DataManager):
                 categoryarray=sorted_employees
             )
         )
-        
+
         fig.update_layout(
             xaxis=dict(
                 rangeslider=dict(visible=False),
@@ -102,5 +106,5 @@ def register_employees_callbacks(app, data_manager: DataManager):
                 ),
             ]
         )
-        
+
         return fig, f"Total Hours Worked: {total_hours}"
