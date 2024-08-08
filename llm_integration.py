@@ -1,7 +1,9 @@
-import logging
 from langchain_community.chat_models import ChatOllama
 from langchain.prompts import ChatPromptTemplate
 from ollama import Client
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def check_ollama_status():
     try:

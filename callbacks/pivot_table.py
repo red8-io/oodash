@@ -1,11 +1,15 @@
-import logging
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import pandas as pd
 from dash import dash_table
 from data_management import DataManager
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def register_pivot_table_callbacks(app, data_manager: DataManager):
+    logger.info("Registering callback...")
+
     @app.callback(
         [Output('pivot-index-selector', 'options'),
          Output('pivot-columns-selector', 'options'),

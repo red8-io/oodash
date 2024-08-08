@@ -1,12 +1,14 @@
-import ast
-import logging
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import pandas as pd
 from data_management import DataManager
 from project_analyser import ProjectAnalyser
+from logging_config import setup_logging
+
+logger = setup_logging()
 
 def register_project_callback(app, data_manager: DataManager):
+    logger.info("Registering callback...")
     project_analyser = ProjectAnalyser(data_manager)
 
     @app.callback(
@@ -22,7 +24,7 @@ def register_project_callback(app, data_manager: DataManager):
          Input('man-hours-toggle', 'value')]
     )
     def update_project_charts(selected_project, start_date, end_date, selected_employees, use_man_hours):
-        logging.info(f"Updating project charts for project: {selected_project}")
+        logger.info(f"Updating project charts for project: {selected_project}")
         if not selected_project:
             return go.Figure(), go.Figure(), go.Figure(), "", ""
 
@@ -34,19 +36,5 @@ def register_project_callback(app, data_manager: DataManager):
             return timeline_fig, revenue_fig, tasks_employees_fig, total_revenue_msg, period_revenue_msg
         
         except Exception as e:
-            logging.error(f"Error in update_project_charts: {str(e)}", exc_info=True)
+            logger.error(f"Error in update_project_charts: {str(e)}", exc_info=True)
             return go.Figure(), go.Figure(), go.Figure(), f"Error: {str(e)}", ""
-
-    @app.callback(
-        Output('project-selector', 'options'),
-        [Input('data-store', 'data')]
-    )
-    def update_project_options(serialized_data):
-        if serialized_data is None:
-            return []
-        
-        data = DataManager.deserialize_dataframes(serialized_data)
-        df_projects = data[0]  # Assuming the first DataFrame is the projects DataFrame
-        
-        project_options = [{'label': i, 'value': i} for i in df_projects['name'].unique() if pd.notna(i)]
-        return project_options

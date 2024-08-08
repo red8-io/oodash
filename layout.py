@@ -1,48 +1,54 @@
-import ast
+import os
 from datetime import datetime, timedelta
-from dash import dcc, html, dash_table
+
 import pandas as pd
-import logging
 
+from dash import dcc, html, dash_table
 from data_management import DataManager
+from llm_integration import check_ollama_status, extract_model_names
+from logging_config import setup_logging
 
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 
 # Function to safely get unique values from a DataFrame column
 def safe_unique_values(df, column_name):
+    if df.empty:
+        logger.warning('Data is probably being loaded')
+        return []
+
     if column_name in df.columns:
         return [{'label': i, 'value': i} for i in sorted(df[column_name].unique()) if pd.notna(i)]
     else:
-        logging.warning(f"Column not found in DataFrame '{column_name}' ")
+        logger.warning(f"Column not found in DataFrame '{column_name}' ")
         return []
 
-# Function to safely get DataFrame columns and process job_id
-def safe_get_columns(df, columns):
-    result = df[[col for col in columns if col in df.columns]].copy()
-    if 'job_id' in result.columns:
-        result['job_id_original'] = result['job_id']
-        result['job_id'] = result['job_id_original'].apply(
-            lambda x: ast.literal_eval(str(x))[0] if isinstance(x, (list, str)) and str(x).startswith('[') else x
-        )
-        result['job_title'] = result['job_id_original'].apply(
-            lambda x: ast.literal_eval(str(x))[1] if isinstance(x, (list, str)) and str(x).startswith('[') else ''
-        )
-        result.drop('job_id_original', axis=1, inplace=True)
-    return result
+def create_login_layout():
+    login_url = os.getenv('LOGIN_URL')
+    return html.Div([
+        html.H1("Welcome to Oodash"),
+        html.P("Please log in to access the dashboard."),
+        html.A("Login", href=login_url, className="login-button")
+    ])
 
-# Dash layout (moved to a separate function for clarity)
-def create_dash_layout(data_manager: DataManager, model_options):
+def create_layout(data_manager: DataManager):
 
-    # Process df_employees to extract job titles
-    df_employees_processed = safe_get_columns(data_manager.df_employees, ['name', 'job_id', 'job_title'])
+    logger.info("Loading layout")
 
+    # Get available models
+    ollama_running, available_models = check_ollama_status()
+    if ollama_running:
+        model_options = [{'label': model, 'value': model} for model in extract_model_names(available_models)]
+    else:
+        model_options = []
+
+    # Layout
     return html.Div([
         html.Div([
             html.H1("Oodash", style={'display': 'inline-block'}),
             html.Div([
                 html.Button('Refresh Data', id='refresh-data', n_clicks=0),
-                html.Span(id='last-update-time', style={'margin-left': '10px'})
-            ], style={'float': 'right', 'margin-top': '20px'})
+                html.Span(id='last-update-time', style={'marginLeft': '10px'})
+            ], style={'float': 'right', 'marginTop': '20px'})
         ]),
 
         # Date range selector
@@ -127,7 +133,7 @@ def create_dash_layout(data_manager: DataManager, model_options):
                             html.Div([
                                 html.Div(id='project-total-revenue', style={'font-weight': 'bold', 'display': 'inline-block', 'margin-right': '20px'}),
                                 html.Div(id='project-period-revenue', style={'font-weight': 'bold', 'display': 'inline-block'})
-                            ], style={'margin-top': '10px', 'margin-bottom': '10px'}),
+                            ], style={'marginTop': '10px', 'margin-bottom': '10px'}),
                             dcc.Graph(id='project-revenue-chart'),
                             dcc.Graph(id='project-tasks-employees-chart')
                         ]
@@ -211,7 +217,7 @@ def create_dash_layout(data_manager: DataManager, model_options):
                                 {'name': 'Job ID', 'id': 'job_id'},
                                 {'name': 'Job Title', 'id': 'job_title'}
                             ],
-                            data=df_employees_processed.to_dict('records'),
+                            data=[],  # Initialize with an empty list
                             style_table={'height': '300px', 'overflowY': 'auto'},
                             style_cell={'textAlign': 'left'},
                             style_header={
@@ -268,15 +274,12 @@ def create_dash_layout(data_manager: DataManager, model_options):
                             value='bar',
                             placeholder="Select chart type"
                         ),
-                    ], style={'width': '25%', 'display': 'inline-block', 'vertical-align': 'top'}),
+                    ], style={'width': '25%', 'display': 'inline-block', 'verticalAlign': 'top'}),
                     html.Div([
                         dcc.Graph(id='pivot-chart'),
                         html.Div(id='pivot-table-container')
                     ], style={'width': '75%', 'display': 'inline-block'})
                 ])
             ]),
-        ], id='tabs'),
-
-        # Store for holding the current data
-        dcc.Store(id='data-store')
+        ], id='tabs')
     ])

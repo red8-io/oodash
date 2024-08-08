@@ -1,5 +1,6 @@
 # Use the official Python slim image
 FROM python:3.12.4-slim
+LABEL version="24.08.07.16.24"
 
 # Set work directory
 WORKDIR /app
@@ -48,4 +49,4 @@ EXPOSE 8003
 USER appuser
 
 # Use JSON format for CMD
-CMD ["sh", "-c", "python main.py"]
+CMD ["sh", "-c", "python -u oodash.py"]
