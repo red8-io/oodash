@@ -34,14 +34,23 @@ Oodash is a dashboard application for visualizing and analyzing Odoo data. It pr
    ODOO_DB=your_database_name
    ODOO_USERNAME=your_username
    ODOO_API_KEY=your_api_key
+   JWT_SECRET_KEY=encryption_key
+   JWT_ALGORITHM=algorithm choice
+   TIMEZONE=your_timezone
+
+   LOGIN_URL=login_url
+
+   # url and port
+   SERVICE_URL=url_to_start_the_service
+   SERVICE_PORT=port_to_start_the_service
    ```
 
 5. Run the application:
    ```
-   python main.py
+   python oodash.py
    ```
 
-6. Open a web browser and navigate to `http://localhost:8050` to access the dashboard.
+6. Open a web browser and navigate to `http://SERVICE_PORT:SERVICE_URL` to access the dashboard.
 
 ## Important Notes
 
@@ -49,7 +58,7 @@ Oodash is a dashboard application for visualizing and analyzing Odoo data. It pr
 This application interacts with Odoo data, which may include personally identifiable information. Users are responsible for ensuring compliance with relevant data protection regulations when using this application. Implement appropriate access controls and data handling procedures to protect sensitive information.
 
 ### Debug Mode
-By default, the application runs with debug mode set to `True`. This can potentially expose sensitive information through detailed error messages. For production use, make sure to set `debug=False` in the `main.py` file.
+By default, the application runs with debug mode set to `True`. This can potentially expose sensitive information through detailed error messages. For production use, make sure to set `debug=False` in the `oodash.py` file.
 
 ## License
 
